@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Start Page</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #202124;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .search-box {
+      margin-bottom: 40px;
+    }
+
+    input[type="text"] {
+      padding: 12px 20px;
+      width: 400px;
+      font-size: 18px;
+      border-radius: 30px;
+      border: none;
+      outline: none;
+      background-color: #303134;
+      color: white;
+    }
+
+    .shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      max-width: 90%;
+    }
+
+    .shortcut {
+      width: 80px;
+      height: 90px;
+      border-radius: 12px;
+      background-color: #303134;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      color: white;
+      padding: 6px 4px;
+    }
+
+    .shortcut img {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 6px;
+    }
+
+    .label {
+      font-size: 12px;
+      line-height: 1.1;
+      word-wrap: break-word;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shortcut:hover {
+      background-color: #3c4043;
+    }
+
+    #addShortcutBtn {
+      background-color: #3c4043;
+      border: 2px dashed #5f6368;
+      color: #aaa;
+      font-size: 32px;
+      font-weight: bold;
+      justify-content: center;
+    }
+
+    #addShortcutBtn:hover {
+      background-color: #5f6368;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="search-box">
+    <form>
+      <input type="text" id="searchInput" placeholder="Search Google..."/>
+    </form>
+  </div>
+
+  <div class="shortcuts" id="shortcuts">
+    <div class="shortcut" id="addShortcutBtn" onclick="addShortcut()">+</div>
+  </div>
+
+  <script>
+    const shortcutsContainer = document.getElementById("shortcuts");
+
+    function getFavicon(url) {
+      try {
+        const u = new URL(url);
+        return `${u.origin}/favicon.ico`;
+      } catch {
+        return "https://www.google.com/s2/favicons?domain=example.com";
+      }
+    }
+
+    function loadShortcuts() {
+      const shortcuts = JSON.parse(localStorage.getItem("shortcuts") || "[]");
+      shortcuts.forEach(({ name, url }) => {
+        const el = createShortcutElement(name, url);
+        shortcutsContainer.insertBefore(el, document.getElementById("addShortcutBtn"));
+      });
+    }
+
+    function createShortcutElement(name, url) {
+      const a = document.createElement("a");
+      a.className = "shortcut";
+      a.href = url;
+      a.title = name;
+      a.target = "_self"; // open in same tab
+
+      const img = document.createElement("img");
+      img.src = getFavicon(url);
+      img.alt = name;
+
+      const label = document.createElement("div");
+      label.className = "label";
+      label.textContent = name;
+
+      a.appendChild(img);
+      a.appendChild(label);
+
+      // Right-click to remove
+      a.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (confirm(`Remove shortcut: "${name}"?`)) {
+          a.remove();
+          removeShortcutFromStorage(url);
+        }
+      });
+
+      return a;
+    }
+
+    function addShortcut() {
+      const name = prompt("Enter shortcut name:");
+      const url = prompt("Enter URL (include https://):");
+      if (name && url) {
+        const shortcut = createShortcutElement(name, url);
+        shortcutsContainer.insertBefore(shortcut, document.getElementById("addShortcutBtn"));
+
+        const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
+        saved.push({ name, url });
+        localStorage.setItem("shortcuts", JSON.stringify(saved));
+      }
+    }
+
+    function removeShortcutFromStorage(urlToRemove) {
+      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
+      saved = saved.filter(({ url }) => url !== urlToRemove);
+      localStorage.setItem("shortcuts", JSON.stringify(saved));
+    }
+
+    // Redirect to Google on search box focus
+    document.getElementById("searchInput").addEventListener("focus", () => {
+      location.href = "https://www.google.com";
+    });
+
+    loadShortcuts();
+  </script>
+
+</body>
+</html>
