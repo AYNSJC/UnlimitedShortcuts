@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Start Page</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       background-color: #202124;
@@ -30,6 +33,7 @@
       outline: none;
       background-color: #303134;
       color: white;
+      transition: all 0.3s ease;
     }
 
     .shortcuts {
@@ -40,7 +44,7 @@
       max-width: 90%;
     }
 
-    .shortcut, #addShortcutBtn {
+    .shortcut {
       width: 80px;
       height: 90px;
       border-radius: 12px;
@@ -50,15 +54,16 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      cursor: pointer;
-      transition: background 0.2s;
+      cursor: grab;
       text-decoration: none;
       color: white;
       padding: 6px 4px;
+      transition: background 0.2s, transform 0.2s;
     }
 
-    .shortcut:hover, #addShortcutBtn:hover {
-      background-color: #3c4043;
+    .shortcut.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
     }
 
     .shortcut img {
@@ -70,20 +75,29 @@
     .label {
       font-size: 12px;
       line-height: 1.1;
-      word-wrap: break-word;
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .shortcut:hover {
+      background-color: #3c4043;
+    }
+
     #addShortcutBtn {
-      color: #aaa;
+      background-color: #303134;
       border: 2px dashed #5f6368;
+      color: #aaa;
       font-size: 32px;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
     }
 
     #addShortcutBtn:hover {
+      background-color: #5f6368;
       color: white;
     }
   </style>
@@ -102,6 +116,7 @@
 
   <script>
     const shortcutsContainer = document.getElementById("shortcuts");
+    let draggedItem = null;
 
     function getFavicon(url) {
       try {
@@ -120,12 +135,22 @@
       });
     }
 
+    function saveShortcuts() {
+      const saved = [];
+      document.querySelectorAll(".shortcut").forEach((node) => {
+        if (node.id !== "addShortcutBtn") {
+          saved.push({ name: node.title, url: node.href });
+        }
+      });
+      localStorage.setItem("shortcuts", JSON.stringify(saved));
+    }
+
     function createShortcutElement(name, url) {
       const a = document.createElement("a");
       a.className = "shortcut";
       a.href = url;
       a.title = name;
-      a.target = "_self";
+      a.draggable = true;
 
       const img = document.createElement("img");
       img.src = getFavicon(url);
@@ -138,12 +163,35 @@
       a.appendChild(img);
       a.appendChild(label);
 
-      // Right-click to remove
       a.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (confirm(`Remove shortcut: "${name}"?`)) {
           a.remove();
-          removeShortcutFromStorage(url);
+          saveShortcuts();
+        }
+      });
+
+      a.addEventListener("dragstart", (e) => {
+        draggedItem = a;
+        a.classList.add("dragging");
+      });
+
+      a.addEventListener("dragend", (e) => {
+        draggedItem = null;
+        a.classList.remove("dragging");
+        saveShortcuts();
+      });
+
+      a.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+
+      a.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (draggedItem && draggedItem !== a) {
+          const all = Array.from(shortcutsContainer.children);
+          const dropIndex = all.indexOf(a);
+          shortcutsContainer.insertBefore(draggedItem, all[dropIndex]);
         }
       });
 
@@ -156,20 +204,10 @@
       if (name && url) {
         const shortcut = createShortcutElement(name, url);
         shortcutsContainer.insertBefore(shortcut, document.getElementById("addShortcutBtn"));
-
-        const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-        saved.push({ name, url });
-        localStorage.setItem("shortcuts", JSON.stringify(saved));
+        saveShortcuts();
       }
     }
 
-    function removeShortcutFromStorage(urlToRemove) {
-      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      saved = saved.filter(({ url }) => url !== urlToRemove);
-      localStorage.setItem("shortcuts", JSON.stringify(saved));
-    }
-
-    // Redirect to Google on search box focus
     document.getElementById("searchInput").addEventListener("focus", () => {
       location.href = "https://www.google.com";
     });
