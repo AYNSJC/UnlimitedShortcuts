@@ -3,182 +3,210 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Start Page</title>
+  <title>Custom New Tab</title>
   <style>
     body {
       margin: 0;
-      background-color: #202124;
+      background: #121212;
       color: white;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      justify-content: flex-start;
+      padding: 2rem;
+      height: 100vh;
     }
 
-    .search-box {
-      margin-bottom: 40px;
+    h1 {
+      margin-bottom: 1rem;
     }
 
-    input[type="text"] {
-      padding: 12px 20px;
-      width: 400px;
-      font-size: 18px;
-      border-radius: 30px;
+    #search {
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    #search input {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 20px;
       border: none;
-      outline: none;
-      background-color: #303134;
-      color: white;
+      font-size: 18px;
     }
 
-    .shortcuts {
+    #shortcuts {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 20px;
+      max-width: 1000px;
       justify-content: center;
-      max-width: 90%;
     }
 
     .shortcut {
-      width: 80px;
-      height: 90px;
-      border-radius: 12px;
-      background-color: #303134;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s;
-      text-decoration: none;
-      color: white;
-      padding: 6px 4px;
+      cursor: move;
     }
 
     .shortcut img {
-      width: 32px;
-      height: 32px;
-      margin-bottom: 6px;
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
     }
 
-    .label {
+    .shortcut span {
+      margin-top: 5px;
+      font-size: 14px;
+      color: #ccc;
+      text-align: center;
+    }
+
+    .remove {
+      margin-top: 5px;
+      color: #ff5555;
       font-size: 12px;
-      line-height: 1.1;
-      word-wrap: break-word;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      cursor: pointer;
     }
 
-    .shortcut:hover {
-      background-color: #3c4043;
-    }
-
-    #addShortcutBtn {
-      background-color: #3c4043;
-      border: 2px dashed #5f6368;
-      color: #aaa;
-      font-size: 32px;
-      font-weight: bold;
+    #addForm {
+      margin-top: 2rem;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
       justify-content: center;
     }
 
-    #addShortcutBtn:hover {
-      background-color: #5f6368;
+    #addForm input {
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #addForm button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #1e88e5;
       color: white;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
+  <h1>🌙 My New Tab</h1>
 
-  <div class="search-box">
-    <form>
-      <input type="text" id="searchInput" placeholder="Search Google..."/>
-    </form>
+  <div id="search">
+    <input id="searchBar" placeholder="Search with Google..." autofocus />
   </div>
 
-  <div class="shortcuts" id="shortcuts">
-    <div class="shortcut" id="addShortcutBtn" onclick="addShortcut()">+</div>
-  </div>
+  <div id="shortcuts"></div>
 
+  <form id="addForm">
+    <input type="url" id="urlInput" placeholder="https://example.com" required />
+    <input type="text" id="nameInput" placeholder="Name" required />
+    <input type="url" id="logoInput" placeholder="https://example.com/favicon.ico" required />
+    <button type="submit">Add Shortcut</button>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    const shortcutsContainer = document.getElementById("shortcuts");
+    const shortcutsEl = document.getElementById("shortcuts");
+    const urlInput = document.getElementById("urlInput");
+    const nameInput = document.getElementById("nameInput");
+    const logoInput = document.getElementById("logoInput");
+    const addForm = document.getElementById("addForm");
+    const searchBar = document.getElementById("searchBar");
 
-    function getFavicon(url) {
-      try {
-        const u = new URL(url);
-        return `${u.origin}/favicon.ico`;
-      } catch {
-        return "https://www.google.com/s2/favicons?domain=example.com";
-      }
+    function getShortcuts() {
+      return JSON.parse(localStorage.getItem("shortcuts") || "[]");
     }
 
-    function loadShortcuts() {
-      const shortcuts = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      shortcuts.forEach(({ name, url }) => {
-        const el = createShortcutElement(name, url);
-        shortcutsContainer.insertBefore(el, document.getElementById("addShortcutBtn"));
+    function saveShortcuts(shortcuts) {
+      localStorage.setItem("shortcuts", JSON.stringify(shortcuts));
+    }
+
+    function renderShortcuts() {
+      shortcutsEl.innerHTML = "";
+      const shortcuts = getShortcuts();
+      shortcuts.forEach((s, index) => {
+        const div = document.createElement("div");
+        div.className = "shortcut";
+
+        const link = document.createElement("a");
+        link.href = s.url;
+        link.target = "_blank";
+
+        const img = document.createElement("img");
+        img.src = s.logo;
+        link.appendChild(img);
+
+        const name = document.createElement("span");
+        name.textContent = s.name;
+
+        const remove = document.createElement("div");
+        remove.className = "remove";
+        remove.textContent = "✖";
+        remove.onclick = () => {
+          const updated = getShortcuts().filter((_, i) => i !== index);
+          saveShortcuts(updated);
+          renderShortcuts();
+        };
+
+        div.appendChild(link);
+        div.appendChild(name);
+        div.appendChild(remove);
+        shortcutsEl.appendChild(div);
       });
     }
 
-    function createShortcutElement(name, url) {
-      const a = document.createElement("a");
-      a.className = "shortcut";
-      a.href = url;
-      a.title = name;
-      a.target = "_self"; // open in same tab
+    addForm.onsubmit = (e) => {
+      e.preventDefault();
+      const newShortcut = {
+        url: urlInput.value,
+        name: nameInput.value,
+        logo: logoInput.value,
+      };
+      const shortcuts = getShortcuts();
+      shortcuts.push(newShortcut);
+      saveShortcuts(shortcuts);
+      renderShortcuts();
+      addForm.reset();
+    };
 
-      const img = document.createElement("img");
-      img.src = getFavicon(url);
-      img.alt = name;
-
-      const label = document.createElement("div");
-      label.className = "label";
-      label.textContent = name;
-
-      a.appendChild(img);
-      a.appendChild(label);
-
-      // Right-click to remove
-      a.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        if (confirm(`Remove shortcut: "${name}"?`)) {
-          a.remove();
-          removeShortcutFromStorage(url);
-        }
-      });
-
-      return a;
-    }
-
-    function addShortcut() {
-      const name = prompt("Enter shortcut name:");
-      const url = prompt("Enter URL (include https://):");
-      if (name && url) {
-        const shortcut = createShortcutElement(name, url);
-        shortcutsContainer.insertBefore(shortcut, document.getElementById("addShortcutBtn"));
-
-        const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-        saved.push({ name, url });
-        localStorage.setItem("shortcuts", JSON.stringify(saved));
+    searchBar.addEventListener("input", (e) => {
+      if (e.target.value.trim().length > 1) {
+        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(e.target.value)}`;
       }
-    }
-
-    function removeShortcutFromStorage(urlToRemove) {
-      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      saved = saved.filter(({ url }) => url !== urlToRemove);
-      localStorage.setItem("shortcuts", JSON.stringify(saved));
-    }
-
-    // Redirect to Google on search box focus
-    document.getElementById("searchInput").addEventListener("focus", () => {
-      location.href = "https://www.google.com";
     });
 
-    loadShortcuts();
-  </script>
+    searchBar.addEventListener("click", () => {
+      if (searchBar.value.trim().length > 1) {
+        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(searchBar.value)}`;
+      }
+    });
 
+    // Drag-and-drop support using SortableJS
+    new Sortable(shortcutsEl, {
+      animation: 150,
+      onEnd: () => {
+        const reordered = Array.from(shortcutsEl.children).map((el) => {
+          const anchor = el.querySelector("a");
+          const span = el.querySelector("span");
+          const img = el.querySelector("img");
+          return {
+            url: anchor.href,
+            name: span.textContent,
+            logo: img.src,
+          };
+        });
+        saveShortcuts(reordered);
+      }
+    });
+
+    renderShortcuts();
+  </script>
 </body>
 </html>
