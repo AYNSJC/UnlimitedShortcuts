@@ -17,11 +17,13 @@
 
     .search-container {
       margin: 40px 0;
+      position: relative;
+      width: 500px;
+      max-width: 90vw;
     }
 
     .search-bar {
-      width: 500px;
-      max-width: 90vw;
+      width: 100%;
       padding: 12px 20px;
       border-radius: 24px;
       border: none;
@@ -29,6 +31,49 @@
       font-size: 18px;
       background-color: #303134;
       color: white;
+      box-sizing: border-box;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #303134;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+
+    .suggestion {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #444;
+    }
+
+    .suggestion:hover {
+      background-color: #3c4043;
+    }
+
+    .suggestion:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.6;
+    }
+
+    .suggestion-text {
+      flex: 1;
+      font-size: 16px;
     }
 
     .groups {
@@ -199,7 +244,8 @@
 <body>
 
   <div class="search-container">
-    <input class="search-bar" placeholder="Search Google..." />
+    <input class="search-bar" placeholder="Search Google or type a URL" />
+    <div class="suggestions" id="suggestions"></div>
   </div>
 
   <div class="groups" id="groups"></div>
@@ -210,10 +256,124 @@
     const groupsContainer = document.getElementById("groups");
     const addGroupBtn = document.getElementById("addGroupBtn");
     const searchBar = document.querySelector(".search-bar");
+    const suggestionsContainer = document.getElementById("suggestions");
 
-    searchBar.addEventListener("focus", () => {
-      window.location.href = "https://www.google.com";
+    let searchTimeout;
+
+    searchBar.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+      
+      clearTimeout(searchTimeout);
+      
+      if (query.length === 0) {
+        hideSuggestions();
+        return;
+      }
+      
+      if (query.length === 1) {
+        // Wait longer for single characters to avoid too many requests
+        searchTimeout = setTimeout(() => {
+          fetchSuggestions(query);
+        }, 250);
+      } else {
+        // Faster for 2+ characters
+        searchTimeout = setTimeout(() => {
+          fetchSuggestions(query);
+        }, 100);
+      }
     });
+
+    searchBar.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = searchBar.value.trim();
+        if (query) {
+          performSearch(query);
+        }
+      }
+      
+      if (e.key === "Escape") {
+        hideSuggestions();
+        searchBar.blur();
+      }
+    });
+
+    searchBar.addEventListener("blur", () => {
+      // Delay hiding to allow clicking on suggestions
+      setTimeout(() => {
+        hideSuggestions();
+      }, 150);
+    });
+
+    async function fetchSuggestions(query) {
+      try {
+        // Use Google's suggestion API (JSONP)
+        const script = document.createElement('script');
+        const callbackName = 'handleSuggestions';
+        
+        window[callbackName] = function(data) {
+          showSuggestions(data[1] || []);
+          document.body.removeChild(script);
+          delete window[callbackName];
+        };
+        
+        script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
+        document.body.appendChild(script);
+        
+        // Fallback timeout
+        setTimeout(() => {
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+            delete window[callbackName];
+          }
+        }, 5000);
+        
+      } catch (error) {
+        console.log('Suggestions not available');
+      }
+    }
+
+    function showSuggestions(suggestions) {
+      suggestionsContainer.innerHTML = '';
+      
+      if (suggestions.length === 0) {
+        hideSuggestions();
+        return;
+      }
+      
+      suggestions.slice(0, 8).forEach(suggestion => {
+        const div = document.createElement('div');
+        div.className = 'suggestion';
+        
+        const icon = document.createElement('div');
+        icon.innerHTML = '🔍';
+        icon.className = 'suggestion-icon';
+        
+        const text = document.createElement('div');
+        text.className = 'suggestion-text';
+        text.textContent = suggestion;
+        
+        div.appendChild(icon);
+        div.appendChild(text);
+        
+        div.addEventListener('click', () => {
+          performSearch(suggestion);
+        });
+        
+        suggestionsContainer.appendChild(div);
+      });
+      
+      suggestionsContainer.style.display = 'block';
+    }
+
+    function hideSuggestions() {
+      suggestionsContainer.style.display = 'none';
+    }
+
+    function performSearch(query) {
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      window.location.href = searchUrl;
+    }
 
     function createGroup(data = { name: "", shortcuts: [] }) {
       const groupDiv = document.createElement("div");
