@@ -2,214 +2,136 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Start Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom New Tab</title>
   <style>
     body {
       margin: 0;
-      background-color: #202124;
-      color: white;
+      padding: 1rem;
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+      background-color: #202124;
+      color: #e8eaed;
     }
-
-    .search-box {
-      margin-bottom: 30px;
-    }
-
-    input[type="text"] {
-      padding: 10px 18px;
-      width: 360px;
-      font-size: 16px;
-      border-radius: 30px;
+    #search {
+      display: block;
+      margin: 0 auto 1.5rem;
+      width: 80%;
+      max-width: 600px;
+      padding: 0.75rem 1rem;
+      font-size: 1.2rem;
+      border-radius: 24px;
       border: none;
       outline: none;
       background-color: #303134;
-      color: white;
+      color: #e8eaed;
     }
-
-    #groups {
+    #groupsContainer {
       display: flex;
-      flex-direction: column;
-      gap: 24px;
-      width: 100%;
-      max-width: 1000px;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: flex-start;
     }
-
     .group {
-      background: #2a2b2d;
-      border-radius: 10px;
-      padding: 10px;
-      overflow: hidden;
+      background: #2c2c2e;
+      border-radius: 12px;
+      padding: 1rem;
+      width: fit-content;
+      max-width: 100%;
     }
-
     .group-header {
       display: flex;
+      gap: 0.5rem;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 0.5rem;
     }
-
-    .group-header input {
-      background: none;
+    .group-title {
+      background: transparent;
       border: none;
-      font-size: 18px;
+      font-size: 1rem;
       color: white;
-      font-weight: bold;
-      flex: 1;
     }
-
-    .group-header input:focus {
-      outline: 2px solid #5f6368;
-    }
-
-    .group-header button {
-      background: none;
-      border: none;
-      color: #aaa;
-      cursor: pointer;
-      font-size: 18px;
-      margin-left: 10px;
-    }
-
-    .shortcuts {
+    .group-content {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 12px;
-      justify-items: center;
-      transition: all 0.3s;
+      grid-template-columns: repeat(auto-fill, 80px);
+      gap: 0.5rem;
     }
-
+    .group-content.collapsed {
+      display: none;
+    }
     .shortcut {
-      width: 70px;
-      height: 80px;
+      width: 80px;
+      height: 90px;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      background: #3c4043;
       border-radius: 12px;
-      background-color: #303134;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      cursor: pointer;
-      text-decoration: none;
-      color: white;
-      padding: 6px 4px;
+      font-size: 0.75rem;
     }
-
     .shortcut img {
-      width: 28px;
-      height: 28px;
-      margin-bottom: 4px;
+      width: 32px;
+      height: 32px;
+      margin-bottom: 0.3rem;
     }
-
-    .label {
-      font-size: 11px;
-      line-height: 1.1;
-      word-wrap: break-word;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-
-    .shortcut:hover {
-      background-color: #3c4043;
-    }
-
-    .control-btn {
+    .add-button {
       background-color: #3c4043;
       border: 2px dashed #5f6368;
-      color: #aaa;
       font-size: 24px;
-      font-weight: bold;
-      width: 70px;
-      height: 80px;
-      border-radius: 12px;
+      color: #aaa;
       display: flex;
       justify-content: center;
       align-items: center;
+      width: 80px;
+      height: 90px;
+      border-radius: 12px;
       cursor: pointer;
-    }
-
-    .control-btn:hover {
-      background-color: #5f6368;
-      color: white;
-    }
-
-    #controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .collapsed .shortcuts {
-      display: none;
     }
   </style>
 </head>
 <body>
-
-  <div class="search-box">
-    <form>
-      <input type="text" id="searchInput" placeholder="Search Google..."/>
-    </form>
-  </div>
-
-  <div id="groups"></div>
-
-  <div id="controls">
-    <div class="control-btn" onclick="addGroup()">+G</div>
-  </div>
-
+  <input id="search" type="text" placeholder="Search Google..." />
+  <div id="groupsContainer"></div>
   <script>
-    const groupsContainer = document.getElementById("groups");
+    const groupsContainer = document.getElementById("groupsContainer");
+
+    document.getElementById("search").addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(e.target.value)}`;
+      }
+    });
 
     function getFavicon(url) {
       try {
         const u = new URL(url);
         return `${u.origin}/favicon.ico`;
       } catch {
-        return "https://www.google.com/s2/favicons?domain=example.com";
+        return "";
       }
     }
 
-    function saveState() {
-      const data = [];
-      groupsContainer.querySelectorAll(".group").forEach(group => {
-        const name = group.querySelector("input").value;
-        const collapsed = group.classList.contains("collapsed");
-        const shortcuts = [...group.querySelectorAll(".shortcut")].map(a => ({
-          name: a.dataset.name,
-          url: a.href
+    function saveGroups() {
+      const data = Array.from(document.querySelectorAll(".group")).map(group => {
+        const name = group.querySelector(".group-title").value;
+        const collapsed = group.querySelector(".group-content").classList.contains("collapsed");
+        const items = Array.from(group.querySelectorAll(".shortcut")).filter(el => !el.classList.contains("add-button")).map(el => ({
+          name: el.querySelector(".label").textContent,
+          url: el.href
         }));
-        data.push({ name, shortcuts, collapsed });
+        return { name, items, collapsed };
       });
       localStorage.setItem("groups", JSON.stringify(data));
     }
 
-    function loadState() {
-      const saved = JSON.parse(localStorage.getItem("groups") || "[]");
-      groupsContainer.innerHTML = "";
-      saved.forEach(({ name, shortcuts, collapsed }) => {
-        const group = createGroup(name);
-        if (collapsed) group.classList.add("collapsed");
-        shortcuts.forEach(({ name, url }) => {
-          const shortcut = createShortcutElement(name, url);
-          group.querySelector(".shortcuts").appendChild(shortcut);
-        });
-        groupsContainer.appendChild(group);
-      });
-    }
-
-    function createShortcutElement(name, url) {
+    function createShortcutElement(name, url, parent, addBtn) {
       const a = document.createElement("a");
       a.className = "shortcut";
       a.href = url;
       a.title = name;
-      a.target = "_self";
-      a.draggable = true;
-      a.dataset.name = name;
+      a.target = "_blank";
 
       const img = document.createElement("img");
       img.src = getFavicon(url);
@@ -222,99 +144,107 @@
       a.appendChild(img);
       a.appendChild(label);
 
-      a.addEventListener("contextmenu", (e) => {
+      a.addEventListener("contextmenu", e => {
         e.preventDefault();
         if (confirm(`Remove shortcut "${name}"?`)) {
           a.remove();
-          saveState();
+          if (parent && addBtn && parent.querySelectorAll(".shortcut:not(.add-button)").length < 10) {
+            addBtn.style.display = "";
+          }
+          saveGroups();
         }
-      });
-
-      a.addEventListener("dragstart", e => {
-        e.dataTransfer.setData("text/plain", JSON.stringify({ name, url }));
       });
 
       return a;
     }
 
-    function addGroup() {
-      const name = prompt("Enter group name:");
-      if (!name) return;
-      const group = createGroup(name);
-      groupsContainer.appendChild(group);
-      saveState();
-    }
-
-    function createGroup(name) {
-      const group = document.createElement("div");
-      group.className = "group";
+    function createGroup(name = "New Group", items = []) {
+      const groupWrapper = document.createElement("div");
+      groupWrapper.className = "group";
 
       const header = document.createElement("div");
       header.className = "group-header";
 
-      const input = document.createElement("input");
-      input.value = name;
-      input.addEventListener("change", saveState);
+      const title = document.createElement("input");
+      title.className = "group-title";
+      title.value = name;
+      title.onchange = saveGroups;
 
-      const toggle = document.createElement("button");
-      toggle.innerHTML = "▼";
-      toggle.onclick = () => {
-        group.classList.toggle("collapsed");
-        toggle.innerHTML = group.classList.contains("collapsed") ? "►" : "▼";
-        saveState();
+      const collapseBtn = document.createElement("button");
+      collapseBtn.textContent = "▼";
+      collapseBtn.onclick = () => {
+        groupContent.classList.toggle("collapsed");
+        collapseBtn.textContent = groupContent.classList.contains("collapsed") ? "▶" : "▼";
+        saveGroups();
       };
 
-      const remove = document.createElement("button");
-      remove.innerHTML = "✖";
-      remove.onclick = () => {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.onclick = () => {
         if (confirm("Delete this group?")) {
-          group.remove();
-          saveState();
+          groupWrapper.remove();
+          saveGroups();
         }
       };
 
-      header.appendChild(input);
-      header.appendChild(toggle);
-      header.appendChild(remove);
+      header.appendChild(title);
+      header.appendChild(collapseBtn);
+      header.appendChild(deleteBtn);
 
-      const shortcuts = document.createElement("div");
-      shortcuts.className = "shortcuts";
-
-      shortcuts.addEventListener("dragover", e => e.preventDefault());
-      shortcuts.addEventListener("drop", e => {
-        e.preventDefault();
-        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-        const el = createShortcutElement(data.name, data.url);
-        shortcuts.appendChild(el);
-        saveState();
-      });
+      const groupContent = document.createElement("div");
+      groupContent.className = "group-content";
 
       const addBtn = document.createElement("div");
-      addBtn.className = "control-btn";
+      addBtn.className = "shortcut add-button";
       addBtn.textContent = "+";
+
+      groupContent.appendChild(addBtn);
+
+      items.forEach(({ name, url }) => {
+        const el = createShortcutElement(name, url, groupContent, addBtn);
+        groupContent.appendChild(el);
+      });
+
       addBtn.onclick = () => {
-        const name = prompt("Shortcut name:");
+        if (groupContent.querySelectorAll(".shortcut:not(.add-button)").length >= 10) return;
+        const name = prompt("Enter shortcut name:");
         const url = prompt("Enter URL (include https://):");
+
         if (name && url) {
-          const el = createShortcutElement(name, url);
-          shortcuts.appendChild(el);
-          saveState();
+          const el = createShortcutElement(name, url, groupContent, addBtn);
+          groupContent.insertBefore(el, addBtn.nextSibling);
+
+          if (groupContent.querySelectorAll(".shortcut:not(.add-button)").length >= 10) {
+            addBtn.style.display = "none";
+          }
+
+          saveGroups();
         }
       };
 
-      shortcuts.appendChild(addBtn);
-      group.appendChild(header);
-      group.appendChild(shortcuts);
-      return group;
+      groupWrapper.appendChild(header);
+      groupWrapper.appendChild(groupContent);
+      groupsContainer.appendChild(groupWrapper);
     }
 
-    // Search redirects to Google
-    document.getElementById("searchInput").addEventListener("focus", () => {
-      location.href = "https://www.google.com";
-    });
+    function loadGroups() {
+      const saved = localStorage.getItem("groups");
+      if (!saved) {
+        createGroup();
+        return;
+      }
+      const data = JSON.parse(saved);
+      data.forEach(({ name, items, collapsed }) => {
+        const group = createGroup(name, items);
+        const content = groupsContainer.lastChild.querySelector(".group-content");
+        if (collapsed) {
+          content.classList.add("collapsed");
+          content.previousSibling.querySelector("button").textContent = "▶";
+        }
+      });
+    }
 
-    loadState();
+    loadGroups();
   </script>
-
 </body>
 </html>
