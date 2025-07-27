@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Start Page</title>
   <style>
     body {
@@ -13,11 +13,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
       min-height: 100vh;
+      padding: 40px 0;
     }
 
     .search-box {
-      margin: 40px 0 20px 0;
+      margin-bottom: 40px;
     }
 
     input[type="text"] {
@@ -31,12 +33,36 @@
       color: white;
     }
 
+    .group {
+      margin-bottom: 40px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background-color: #3c4043;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .group-header input {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: white;
+      width: 100%;
+    }
+
     .shortcuts {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 16px;
       justify-items: center;
-      max-width: 90vw;
     }
 
     .shortcut {
@@ -49,12 +75,11 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      cursor: move;
+      cursor: pointer;
       transition: background 0.2s;
       text-decoration: none;
       color: white;
       padding: 6px 4px;
-      user-select: none;
     }
 
     .shortcut img {
@@ -77,7 +102,7 @@
     }
 
     #addShortcutBtn {
-      background-color: #303134;
+      background-color: #3c4043;
       border: 2px dashed #5f6368;
       color: #aaa;
       font-size: 32px;
@@ -89,56 +114,80 @@
       background-color: #5f6368;
       color: white;
     }
-
-    .drag-over {
-      outline: 2px dashed #999;
-    }
-
-    .label[contenteditable="true"] {
-      border-bottom: 1px dashed #ccc;
-      outline: none;
-    }
   </style>
 </head>
 <body>
-
   <div class="search-box">
     <form>
-      <input type="text" id="searchInput" placeholder="Search Google..."/>
+      <input type="text" id="searchInput" placeholder="Search Google...">
     </form>
   </div>
 
-  <div class="shortcuts" id="shortcuts">
-    <div class="shortcut" id="addShortcutBtn" onclick="addShortcut()">+</div>
-  </div>
+  <div id="groupsContainer"></div>
 
   <script>
-    const shortcutsContainer = document.getElementById("shortcuts");
+    document.getElementById("searchInput").addEventListener("focus", () => {
+      location.href = "https://www.google.com";
+    });
+
+    let groups = JSON.parse(localStorage.getItem("groups") || "[]");
 
     function getFavicon(url) {
       try {
         const u = new URL(url);
         return `${u.origin}/favicon.ico`;
       } catch {
-        return "https://www.google.com/s2/favicons?sz=64&domain=example.com";
+        return "https://www.google.com/s2/favicons?domain=example.com";
       }
     }
 
-    function loadShortcuts() {
-      const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      saved.forEach(({ name, url }) => {
-        const el = createShortcutElement(name, url);
-        shortcutsContainer.insertBefore(el, document.getElementById("addShortcutBtn"));
+    function createGroup(groupData, index) {
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "group";
+
+      const header = document.createElement("div");
+      header.className = "group-header";
+
+      const input = document.createElement("input");
+      input.value = groupData.name;
+      input.addEventListener("input", () => {
+        groups[index].name = input.value;
+        saveGroups();
       });
+
+      header.appendChild(input);
+
+      header.addEventListener("click", () => {
+        shortcutsDiv.hidden = !shortcutsDiv.hidden;
+      });
+
+      const shortcutsDiv = document.createElement("div");
+      shortcutsDiv.className = "shortcuts";
+
+      groupData.shortcuts.forEach(shortcut => {
+        shortcutsDiv.appendChild(createShortcutElement(shortcut.name, shortcut.url, index));
+      });
+
+      const addBtn = document.createElement("div");
+      addBtn.className = "shortcut";
+      addBtn.id = "addShortcutBtn";
+      addBtn.textContent = "+";
+      addBtn.onclick = () => addShortcut(index, shortcutsDiv);
+      shortcutsDiv.appendChild(addBtn);
+
+      groupDiv.appendChild(header);
+      groupDiv.appendChild(shortcutsDiv);
+
+      return groupDiv;
     }
 
-    function createShortcutElement(name, url) {
+    function createShortcutElement(name, url, groupIndex) {
       const a = document.createElement("a");
       a.className = "shortcut";
       a.href = url;
-      a.draggable = true;
       a.title = name;
       a.target = "_self";
+      a.draggable = true;
 
       const img = document.createElement("img");
       img.src = getFavicon(url);
@@ -147,106 +196,70 @@
       const label = document.createElement("div");
       label.className = "label";
       label.textContent = name;
-      label.contentEditable = true;
-
-      // Save name on edit
-      label.addEventListener("blur", () => {
-        const newName = label.textContent.trim();
-        if (newName && newName !== name) {
-          updateShortcutName(url, newName);
-          a.title = newName;
-        }
-      });
-
-      // Delete on right-click
-      a.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        if (confirm(`Remove shortcut: "${name}"?`)) {
-          a.remove();
-          removeShortcutFromStorage(url);
-        }
-      });
-
-      // Drag-and-drop handlers
-      a.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", url);
-        a.classList.add("dragging");
-      });
-
-      a.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        a.classList.add("drag-over");
-      });
-
-      a.addEventListener("dragleave", () => {
-        a.classList.remove("drag-over");
-      });
-
-      a.addEventListener("drop", (e) => {
-        e.preventDefault();
-        a.classList.remove("drag-over");
-
-        const draggedUrl = e.dataTransfer.getData("text/plain");
-        if (draggedUrl === url) return;
-
-        const shortcuts = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-        const fromIndex = shortcuts.findIndex(s => s.url === draggedUrl);
-        const toIndex = shortcuts.findIndex(s => s.url === url);
-
-        if (fromIndex === -1 || toIndex === -1) return;
-
-        const [moved] = shortcuts.splice(fromIndex, 1);
-        shortcuts.splice(toIndex, 0, moved);
-        localStorage.setItem("shortcuts", JSON.stringify(shortcuts));
-
-        refreshShortcuts();
-      });
-
-      a.addEventListener("dragend", () => {
-        a.classList.remove("dragging");
-      });
 
       a.appendChild(img);
       a.appendChild(label);
+
+      a.addEventListener("contextmenu", e => {
+        e.preventDefault();
+        if (confirm(`Remove shortcut: "${name}"?`)) {
+          a.remove();
+          groups[groupIndex].shortcuts = groups[groupIndex].shortcuts.filter(s => s.url !== url);
+          saveGroups();
+        }
+      });
+
+      a.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ name, url, groupIndex }));
+      });
+
+      a.addEventListener("dragover", e => e.preventDefault());
+
+      a.addEventListener("drop", e => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+        if (data.url !== url) {
+          // Swap elements in storage
+          let aIndex = groups[groupIndex].shortcuts.findIndex(s => s.url === url);
+          let bIndex = groups[data.groupIndex].shortcuts.findIndex(s => s.url === data.url);
+          let temp = groups[groupIndex].shortcuts[aIndex];
+          groups[groupIndex].shortcuts[aIndex] = groups[data.groupIndex].shortcuts[bIndex];
+          groups[data.groupIndex].shortcuts[bIndex] = temp;
+          saveGroups();
+          location.reload();
+        }
+      });
+
       return a;
     }
 
-    function addShortcut() {
+    function addShortcut(groupIndex, shortcutsDiv) {
       const name = prompt("Enter shortcut name:");
       const url = prompt("Enter URL (include https://):");
       if (name && url) {
-        const el = createShortcutElement(name, url);
-        shortcutsContainer.insertBefore(el, document.getElementById("addShortcutBtn"));
-        const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-        saved.push({ name, url });
-        localStorage.setItem("shortcuts", JSON.stringify(saved));
+        groups[groupIndex].shortcuts.push({ name, url });
+        saveGroups();
+        const newShortcut = createShortcutElement(name, url, groupIndex);
+        shortcutsDiv.insertBefore(newShortcut, shortcutsDiv.lastChild);
       }
     }
 
-    function removeShortcutFromStorage(urlToRemove) {
-      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      saved = saved.filter(({ url }) => url !== urlToRemove);
-      localStorage.setItem("shortcuts", JSON.stringify(saved));
+    function saveGroups() {
+      localStorage.setItem("groups", JSON.stringify(groups));
     }
 
-    function updateShortcutName(urlToUpdate, newName) {
-      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
-      saved = saved.map(s => s.url === urlToUpdate ? { ...s, name: newName } : s);
-      localStorage.setItem("shortcuts", JSON.stringify(saved));
+    function init() {
+      const container = document.getElementById("groupsContainer");
+      if (groups.length === 0) {
+        groups.push({ name: "Group 1", shortcuts: [] });
+        saveGroups();
+      }
+      groups.forEach((group, i) => {
+        container.appendChild(createGroup(group, i));
+      });
     }
 
-    function refreshShortcuts() {
-      document.querySelectorAll(".shortcut:not(#addShortcutBtn)").forEach(e => e.remove());
-      loadShortcuts();
-    }
-
-    // Search redirect
-    document.getElementById("searchInput").addEventListener("focus", () => {
-      location.href = "https://www.google.com";
-    });
-
-    loadShortcuts();
+    init();
   </script>
-
 </body>
 </html>
