@@ -43,6 +43,12 @@
       border-radius: 16px;
       padding: 16px;
       transition: 0.3s ease;
+      position: relative;
+    }
+
+    .group.drag-over {
+      background-color: #3a4043;
+      transform: scale(1.02);
     }
 
     .group-header {
@@ -81,6 +87,14 @@
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       gap: 12px;
+      min-height: 50px;
+      padding: 8px;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .shortcut-grid.drag-over {
+      background-color: #3c4043;
     }
 
     .shortcut {
@@ -89,12 +103,27 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
+      position: relative;
+      border-radius: 8px;
+      padding: 4px;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+
+    .shortcut:hover {
+      transform: scale(1.05);
+    }
+
+    .shortcut.dragging {
+      opacity: 0.5;
+      transform: rotate(5deg);
     }
 
     .shortcut img {
       width: 32px;
       height: 32px;
       border-radius: 8px;
+      pointer-events: none;
     }
 
     .shortcut-name {
@@ -104,6 +133,35 @@
       border: none;
       text-align: center;
       width: 100%;
+      cursor: text;
+    }
+
+    .shortcut-name:focus {
+      outline: 1px solid #4285f4;
+      border-radius: 3px;
+      background-color: #333;
+    }
+
+    .shortcut-delete {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #ea4335;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .shortcut:hover .shortcut-delete {
+      display: flex;
     }
 
     .add-shortcut {
@@ -129,6 +187,13 @@
       cursor: pointer;
       margin: 20px;
     }
+
+    .drag-placeholder {
+      background-color: #444;
+      border: 2px dashed #666;
+      border-radius: 8px;
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
@@ -140,6 +205,7 @@
   <div class="groups" id="groups"></div>
   <button class="add-group" id="addGroupBtn">+ Add Group</button>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script>
     const groupsContainer = document.getElementById("groups");
     const addGroupBtn = document.getElementById("addGroupBtn");
@@ -192,12 +258,15 @@
 
       collapseBtn.onclick = () => {
         groupDiv.classList.toggle("collapsed");
+        collapseBtn.textContent = groupDiv.classList.contains("collapsed") ? "▶" : "▼";
         saveData();
       };
 
       deleteBtn.onclick = () => {
-        groupDiv.remove();
-        saveData();
+        if (confirm("Delete this group and all its shortcuts?")) {
+          groupDiv.remove();
+          saveData();
+        }
       };
 
       nameInput.oninput = saveData;
@@ -206,33 +275,94 @@
         if (shortcutGrid.children.length >= 10) return;
         const url = prompt("Enter website URL:");
         if (!url) return;
-        const shortcut = createShortcut(url, "Site");
+        const name = prompt("Enter site name (optional):") || "Site";
+        const shortcut = createShortcut(url, name);
         shortcutGrid.appendChild(shortcut);
         saveData();
-        if (shortcutGrid.children.length >= 10) addBtn.style.display = "none";
+        updateAddButtonVisibility(shortcutGrid, addBtn);
       };
 
-      // Hide add button if already 10
-      if (shortcutGrid.children.length >= 10) addBtn.style.display = "none";
-
+      // Initialize Sortable for this grid
       new Sortable(shortcutGrid, {
+        group: "shortcuts",
         animation: 150,
-        onEnd: saveData
+        ghostClass: "drag-placeholder",
+        onStart: function(evt) {
+          evt.item.classList.add("dragging");
+        },
+        onEnd: function(evt) {
+          evt.item.classList.remove("dragging");
+          updateAllAddButtons();
+          saveData();
+        },
+        onAdd: function(evt) {
+          const targetGrid = evt.to;
+          const addBtn = targetGrid.parentElement.querySelector(".add-shortcut");
+          updateAddButtonVisibility(targetGrid, addBtn);
+        },
+        onRemove: function(evt) {
+          const sourceGrid = evt.from;
+          const addBtn = sourceGrid.parentElement.querySelector(".add-shortcut");
+          updateAddButtonVisibility(sourceGrid, addBtn);
+        }
       });
+
+      updateAddButtonVisibility(shortcutGrid, addBtn);
     }
 
     function createShortcut(url, name) {
       const div = document.createElement("div");
       div.className = "shortcut";
+      div.draggable = true;
+      
       const img = document.createElement("img");
       img.src = "https://www.google.com/s2/favicons?sz=64&domain_url=" + encodeURIComponent(url);
+      
       const nameInput = document.createElement("input");
       nameInput.className = "shortcut-name";
       nameInput.value = name;
       nameInput.oninput = saveData;
-      div.append(img, nameInput);
-      div.onclick = () => window.open(url, "_blank");
+      
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "shortcut-delete";
+      deleteBtn.innerHTML = "×";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm("Remove this shortcut?")) {
+          const grid = div.parentElement;
+          const addBtn = grid.parentElement.querySelector(".add-shortcut");
+          div.remove();
+          updateAddButtonVisibility(grid, addBtn);
+          saveData();
+        }
+      };
+
+      div.append(img, nameInput, deleteBtn);
+      
+      div.onclick = (e) => {
+        if (e.target === nameInput || e.target === deleteBtn) return;
+        window.location.href = url;
+      };
+
+      // Store URL as data attribute for easier access
+      div.dataset.url = url;
+
       return div;
+    }
+
+    function updateAddButtonVisibility(grid, addBtn) {
+      if (grid.children.length >= 10) {
+        addBtn.style.display = "none";
+      } else {
+        addBtn.style.display = "block";
+      }
+    }
+
+    function updateAllAddButtons() {
+      document.querySelectorAll(".shortcut-grid").forEach(grid => {
+        const addBtn = grid.parentElement.querySelector(".add-shortcut");
+        updateAddButtonVisibility(grid, addBtn);
+      });
     }
 
     function saveData() {
@@ -240,18 +370,26 @@
       document.querySelectorAll(".group").forEach(group => {
         const name = group.querySelector(".group-name").value;
         const shortcuts = [...group.querySelectorAll(".shortcut")].map(shortcut => {
-          const url = shortcut.onclick.toString().match(/window\.open\("([^"]+)/)?.[1] || "";
+          const url = shortcut.dataset.url;
           const name = shortcut.querySelector(".shortcut-name").value;
           return { url, name };
         });
-        data.push({ name, shortcuts });
+        const collapsed = group.classList.contains("collapsed");
+        data.push({ name, shortcuts, collapsed });
       });
       localStorage.setItem("groupsData", JSON.stringify(data));
     }
 
     function loadData() {
       const data = JSON.parse(localStorage.getItem("groupsData") || "[]");
-      data.forEach(group => createGroup(group));
+      data.forEach(group => {
+        createGroup(group);
+        if (group.collapsed) {
+          const lastGroup = groupsContainer.lastElementChild;
+          lastGroup.classList.add("collapsed");
+          lastGroup.querySelector(".collapse-btn").textContent = "▶";
+        }
+      });
     }
 
     addGroupBtn.onclick = () => {
@@ -259,8 +397,15 @@
       saveData();
     };
 
+    // Initialize Sortable for groups container
+    new Sortable(groupsContainer, {
+      handle: ".group-header",
+      animation: 150,
+      ghostClass: "drag-placeholder",
+      onEnd: saveData
+    });
+
     loadData();
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 </body>
 </html>
