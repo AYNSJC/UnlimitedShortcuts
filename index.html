@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Start Page</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       margin: 0;
       background-color: #202124;
@@ -16,8 +13,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: start;
       min-height: 100vh;
+      padding: 40px 20px;
     }
 
     .search-box {
@@ -33,15 +31,13 @@
       outline: none;
       background-color: #303134;
       color: white;
-      transition: all 0.3s ease;
     }
 
     .shortcuts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
+      display: grid;
+      grid-template-columns: repeat(10, 80px);
+      grid-gap: 16px;
       justify-content: center;
-      max-width: 90%;
     }
 
     .shortcut {
@@ -55,15 +51,11 @@
       justify-content: center;
       text-align: center;
       cursor: grab;
+      transition: background 0.2s;
       text-decoration: none;
       color: white;
       padding: 6px 4px;
-      transition: background 0.2s, transform 0.2s;
-    }
-
-    .shortcut.dragging {
-      opacity: 0.5;
-      transform: scale(1.05);
+      user-select: none;
     }
 
     .shortcut img {
@@ -75,6 +67,7 @@
     .label {
       font-size: 12px;
       line-height: 1.1;
+      word-wrap: break-word;
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -85,15 +78,12 @@
     }
 
     #addShortcutBtn {
-      background-color: #303134;
+      background-color: #3c4043;
       border: 2px dashed #5f6368;
       color: #aaa;
       font-size: 32px;
       font-weight: bold;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      transition: background 0.2s;
     }
 
     #addShortcutBtn:hover {
@@ -106,7 +96,7 @@
 
   <div class="search-box">
     <form>
-      <input type="text" id="searchInput" placeholder="Search Google..." />
+      <input type="text" id="searchInput" placeholder="Search Google..."/>
     </form>
   </div>
 
@@ -116,14 +106,13 @@
 
   <script>
     const shortcutsContainer = document.getElementById("shortcuts");
-    let draggedItem = null;
 
     function getFavicon(url) {
       try {
         const u = new URL(url);
-        return `${u.origin}/favicon.ico`;
+        return `https://www.google.com/s2/favicons?sz=64&domain_url=${u.origin}`;
       } catch {
-        return "https://www.google.com/s2/favicons?domain=example.com";
+        return "https://www.google.com/s2/favicons?sz=64&domain=example.com";
       }
     }
 
@@ -135,22 +124,12 @@
       });
     }
 
-    function saveShortcuts() {
-      const saved = [];
-      document.querySelectorAll(".shortcut").forEach((node) => {
-        if (node.id !== "addShortcutBtn") {
-          saved.push({ name: node.title, url: node.href });
-        }
-      });
-      localStorage.setItem("shortcuts", JSON.stringify(saved));
-    }
-
     function createShortcutElement(name, url) {
       const a = document.createElement("a");
       a.className = "shortcut";
       a.href = url;
       a.title = name;
-      a.draggable = true;
+      a.target = "_self";
 
       const img = document.createElement("img");
       img.src = getFavicon(url);
@@ -163,39 +142,49 @@
       a.appendChild(img);
       a.appendChild(label);
 
+      a.setAttribute("draggable", true);
+
+      // Right-click to remove
       a.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (confirm(`Remove shortcut: "${name}"?`)) {
           a.remove();
-          saveShortcuts();
+          removeShortcutFromStorage(url);
         }
       });
 
+      // Drag logic
       a.addEventListener("dragstart", (e) => {
-        draggedItem = a;
+        e.dataTransfer.setData("text/plain", url);
         a.classList.add("dragging");
       });
-
-      a.addEventListener("dragend", (e) => {
-        draggedItem = null;
+      a.addEventListener("dragend", () => {
         a.classList.remove("dragging");
-        saveShortcuts();
-      });
-
-      a.addEventListener("dragover", (e) => {
-        e.preventDefault();
-      });
-
-      a.addEventListener("drop", (e) => {
-        e.preventDefault();
-        if (draggedItem && draggedItem !== a) {
-          const all = Array.from(shortcutsContainer.children);
-          const dropIndex = all.indexOf(a);
-          shortcutsContainer.insertBefore(draggedItem, all[dropIndex]);
-        }
       });
 
       return a;
+    }
+
+    // Drag-drop container logic
+    shortcutsContainer.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const dragging = document.querySelector(".dragging");
+      const afterElement = getDragAfterElement(shortcutsContainer, e.clientX, e.clientY);
+      const addBtn = document.getElementById("addShortcutBtn");
+      if (afterElement == null || afterElement === addBtn) {
+        shortcutsContainer.insertBefore(dragging, addBtn);
+      } else {
+        shortcutsContainer.insertBefore(dragging, afterElement);
+      }
+      updateOrder();
+    });
+
+    function getDragAfterElement(container, x, y) {
+      const draggables = [...container.querySelectorAll(".shortcut:not(.dragging):not(#addShortcutBtn)")];
+      return draggables.find(el => {
+        const box = el.getBoundingClientRect();
+        return y < box.top + box.height / 2;
+      });
     }
 
     function addShortcut() {
@@ -204,10 +193,32 @@
       if (name && url) {
         const shortcut = createShortcutElement(name, url);
         shortcutsContainer.insertBefore(shortcut, document.getElementById("addShortcutBtn"));
-        saveShortcuts();
+
+        const saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
+        saved.push({ name, url });
+        localStorage.setItem("shortcuts", JSON.stringify(saved));
       }
     }
 
+    function removeShortcutFromStorage(urlToRemove) {
+      let saved = JSON.parse(localStorage.getItem("shortcuts") || "[]");
+      saved = saved.filter(({ url }) => url !== urlToRemove);
+      localStorage.setItem("shortcuts", JSON.stringify(saved));
+    }
+
+    function updateOrder() {
+      const newOrder = [];
+      document.querySelectorAll(".shortcut").forEach((el) => {
+        if (el.id !== "addShortcutBtn") {
+          const label = el.querySelector(".label")?.textContent || "";
+          const href = el.href;
+          newOrder.push({ name: label, url: href });
+        }
+      });
+      localStorage.setItem("shortcuts", JSON.stringify(newOrder));
+    }
+
+    // Redirect to Google on search box focus
     document.getElementById("searchInput").addEventListener("focus", () => {
       location.href = "https://www.google.com";
     });
