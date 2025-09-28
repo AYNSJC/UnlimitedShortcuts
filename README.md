@@ -9,4 +9,4 @@ after that you can go to its settings and paste: https://aynsjc.github.io/Unlimi
 websites and use it.
 
 ## Disclaimer
-It saves the data locally and there is no web save soo, no data is backed up.
+It saves the data locally and there is no web save so, no data is backed up.
