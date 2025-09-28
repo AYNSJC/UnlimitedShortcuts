@@ -1,4 +1,4 @@
-# Buggy
+# UnlimtedShortcuts
 You can use this website: https://aynsjc.github.io/UnlimitedShortcuts/ <br>
 This allows you to pin as many websites as you want, all can be grouped and organised; all the code for this website is on this github repository, you can drag and drop
 websites and groups and all works properly.
