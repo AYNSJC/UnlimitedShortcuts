@@ -504,6 +504,23 @@
         window.location.href = url;
       };
 
+      div.onmousedown = (e) => {
+        if (e.target === nameInput || e.target === deleteBtn) return;
+        // Middle mouse button (button 1)
+        if (e.button === 1) {
+          e.preventDefault();
+          window.open(url, "_blank");
+        }
+      };
+
+      div.onauxclick = (e) => {
+        if (e.target === nameInput || e.target === deleteBtn) return;
+        // Middle click
+        if (e.button === 1) {
+          e.preventDefault();
+        }
+      };
+
       // Store URL as data attribute for easier access
       div.dataset.url = url;
 
