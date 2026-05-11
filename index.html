@@ -3,591 +3,837 @@
 <head>
   <meta charset="UTF-8">
   <title>New Tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --accent: #3fb950;
+      --accent2: #58a6ff;
+      --red: #f85149;
+      --amber: #d29922;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
     body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #202124;
-      color: white;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
     }
 
-    .search-container {
-      margin: 40px 0;
+    /* ── top bar ── */
+    .topbar {
+      width: 100%;
+      max-width: 1100px;
+      padding: 28px 24px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    /* ── clock ── */
+    .clock-block {
+      flex-shrink: 0;
+    }
+    .clock-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 52px;
+      font-weight: 300;
+      letter-spacing: -2px;
+      line-height: 1;
+      color: var(--text);
+    }
+    .clock-time .colon {
+      animation: blink 1s step-end infinite;
+      display: inline-block;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+    .clock-date {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── search ── */
+    .search-wrap {
+      flex: 1;
       position: relative;
-      width: 500px;
-      max-width: 90vw;
+      margin-top: 6px;
     }
-
     .search-bar {
       width: 100%;
-      padding: 12px 20px;
+      padding: 12px 18px 12px 44px;
       border-radius: 24px;
-      border: none;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
       outline: none;
-      font-size: 18px;
-      background-color: #303134;
-      color: white;
-      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-
+    .search-bar:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(88,166,255,0.12);
+    }
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 17px;
+      pointer-events: none;
+    }
     .suggestions {
       position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background-color: #303134;
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      max-height: 300px;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      max-height: 280px;
       overflow-y: auto;
       z-index: 1000;
       display: none;
     }
-
     .suggestion {
-      padding: 12px 20px;
+      padding: 10px 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #444;
+      gap: 10px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
     }
+    .suggestion:hover { background: var(--surface2); }
+    .suggestion:last-child { border-bottom: none; }
+    .sug-icon { color: var(--muted); font-size: 14px; }
 
-    .suggestion:hover {
-      background-color: #3c4043;
+    /* ── github panel ── */
+    .github-panel {
+      flex-shrink: 0;
+      width: 260px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
     }
-
-    .suggestion:last-child {
-      border-bottom: none;
+    .gh-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
     }
-
-    .suggestion-icon {
-      width: 16px;
-      height: 16px;
-      opacity: 0.6;
+    .gh-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      object-fit: cover;
     }
-
-    .suggestion-text {
+    .gh-username {
+      font-size: 13px;
+      font-weight: 500;
       flex: 1;
+      color: var(--accent2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gh-edit-btn {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .gh-edit-btn:hover { color: var(--text); border-color: var(--border2); }
+
+    .gh-setup {
+      text-align: center;
+      padding: 8px 0;
+    }
+    .gh-setup p { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .gh-input-row { display: flex; gap: 6px; }
+    .gh-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 6px 10px;
+      outline: none;
+    }
+    .gh-input:focus { border-color: var(--accent2); }
+    .gh-go-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #0d1117;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .gh-go-btn:hover { opacity: 0.85; }
+
+    /* contribution graph */
+    .gh-graph-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .gh-graph {
+      display: flex;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .gh-col { display: flex; flex-direction: column; gap: 2px; }
+    .gh-cell {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      background: var(--surface2);
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .gh-cell[data-level="1"] { background: #0e4429; }
+    .gh-cell[data-level="2"] { background: #006d32; }
+    .gh-cell[data-level="3"] { background: #26a641; }
+    .gh-cell[data-level="4"] { background: var(--accent); }
+    .gh-cell:hover { opacity: 0.7; }
+
+    .gh-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .gh-stat { text-align: center; }
+    .gh-stat-val {
+      font-family: 'DM Mono', monospace;
       font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .gh-stat-label { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    .gh-error {
+      font-size: 11px;
+      color: var(--red);
+      margin-top: 6px;
+      text-align: center;
+    }
+    .gh-loading {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      padding: 8px 0;
     }
 
-    .groups {
-      width: 90%;
+    /* ── main content ── */
+    .main {
+      width: 100%;
+      max-width: 1100px;
+      padding: 20px 24px 40px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
+
+    .groups { display: flex; flex-direction: column; gap: 16px; }
 
     .group {
-      background-color: #2e2f31;
-      border-radius: 16px;
-      padding: 16px;
-      transition: 0.3s ease;
-      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      transition: border-color 0.2s;
     }
-
     .group.drag-over {
-      background-color: #3a4043;
-      transform: scale(1.02);
+      border-color: var(--accent2);
+      background: var(--surface2);
     }
 
     .group-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 12px;
+      cursor: grab;
+    }
+    .group-header:active { cursor: grabbing; }
+
+    .group-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
     }
 
     .group-name {
       flex: 1;
-      font-size: 16px;
-      padding: 6px 12px;
-      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border: 1px solid transparent;
       border-radius: 6px;
-      background-color: #444;
-      color: white;
+      background: transparent;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s, border-color 0.15s;
     }
+    .group-name:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+    .group-name:focus { outline: none; background: var(--surface2); border-color: var(--accent2); color: var(--text); }
 
-    .collapse-btn,
-    .delete-group {
+    .collapse-btn, .delete-group {
       background: none;
       border: none;
-      color: white;
+      color: var(--muted);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
     }
+    .collapse-btn:hover, .delete-group:hover { color: var(--text); background: var(--surface2); }
+    .delete-group:hover { color: var(--red); }
 
-    .group-content {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .group-content { display: flex; flex-direction: column; gap: 10px; }
 
     .shortcut-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 12px;
+      gap: 10px;
       min-height: 50px;
-      padding: 8px;
-      border-radius: 8px;
-      transition: background-color 0.2s;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
     }
-
-    .shortcut-grid.drag-over {
-      background-color: #3c4043;
-    }
+    .shortcut-grid.drag-over { background: var(--surface2); }
 
     .shortcut {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
       position: relative;
-      border-radius: 8px;
-      padding: 4px;
-      transition: transform 0.2s;
+      border-radius: var(--radius-sm);
+      padding: 6px 4px;
+      transition: background 0.15s, transform 0.15s;
       user-select: none;
     }
-
-    .shortcut:hover {
-      transform: scale(1.05);
-    }
-
-    .shortcut.dragging {
-      opacity: 0.5;
-      transform: rotate(5deg);
-    }
+    .shortcut:hover { background: var(--surface2); transform: translateY(-2px); }
+    .shortcut.dragging { opacity: 0.4; transform: scale(0.9); }
 
     .shortcut img {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 28px; height: 28px;
+      border-radius: 7px;
       pointer-events: none;
     }
-
     .shortcut-name {
-      font-size: 12px;
-      color: #ccc;
+      font-size: 11px;
+      color: var(--muted);
       background: transparent;
       border: none;
       text-align: center;
       width: 100%;
       cursor: text;
+      font-family: 'DM Sans', sans-serif;
+      transition: color 0.15s;
     }
-
+    .shortcut:hover .shortcut-name { color: var(--text); }
     .shortcut-name:focus {
-      outline: 1px solid #4285f4;
+      outline: 1px solid var(--accent2);
       border-radius: 3px;
-      background-color: #333;
+      background: var(--surface);
+      color: var(--text);
     }
 
     .shortcut-delete {
       position: absolute;
-      top: -5px;
-      right: -5px;
-      background-color: #ea4335;
+      top: -4px; right: -4px;
+      background: var(--red);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 18px;
-      height: 18px;
+      width: 16px; height: 16px;
       font-size: 10px;
       cursor: pointer;
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 10;
+      line-height: 1;
     }
-
-    .shortcut:hover .shortcut-delete {
-      display: flex;
-    }
+    .shortcut:hover .shortcut-delete { display: flex; }
 
     .add-shortcut {
-      background-color: #3c4043;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--muted);
+      padding: 6px 12px;
+      border: 1px dashed var(--border2);
+      border-radius: var(--radius-sm);
       cursor: pointer;
       align-self: flex-start;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
+    .add-shortcut:hover { color: var(--text); border-color: var(--border2); background: var(--surface); }
 
-    .group.collapsed .group-content {
-      display: none;
-    }
+    .group.collapsed .group-content { display: none; }
 
-    .add-group {
-      background-color: #3c4043;
-      color: white;
+    .add-group-btn {
+      background: var(--surface);
+      color: var(--muted);
       padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
+      border: 1px dashed var(--border2);
+      border-radius: var(--radius);
       cursor: pointer;
-      margin: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      align-self: flex-start;
+      transition: color 0.15s, border-color 0.15s;
     }
+    .add-group-btn:hover { color: var(--text); border-color: var(--text); }
 
     .drag-placeholder {
-      background-color: #444;
-      border: 2px dashed #666;
-      border-radius: 8px;
+      background: var(--surface2);
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius-sm);
       opacity: 0.5;
     }
   </style>
 </head>
 <body>
 
-  <div class="search-container">
-    <input class="search-bar" placeholder="Search Google or type a URL" />
-    <div class="suggestions" id="suggestions"></div>
+  <div class="topbar">
+    <div class="clock-block">
+      <div class="clock-time">
+        <span id="ch">00</span><span class="colon">:</span><span id="cm">00</span>
+      </div>
+      <div class="clock-date" id="clock-date"></div>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-bar" id="searchBar" placeholder="Search or type a URL…" autocomplete="off" />
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="github-panel" id="ghPanel">
+      <div class="gh-header">
+        <img class="gh-avatar" id="ghAvatar" src="" alt="" style="display:none">
+        <span class="gh-username" id="ghUsername">GitHub</span>
+        <button class="gh-edit-btn" id="ghEditBtn" style="display:none">edit</button>
+      </div>
+      <div id="ghSetup">
+        <div class="gh-setup">
+          <p>Enter your GitHub username to see your contribution graph</p>
+          <div class="gh-input-row">
+            <input class="gh-input" id="ghInput" placeholder="username" />
+            <button class="gh-go-btn" id="ghGoBtn">Go</button>
+          </div>
+        </div>
+      </div>
+      <div id="ghData" style="display:none">
+        <div class="gh-graph-label" id="ghGraphLabel"></div>
+        <div class="gh-graph" id="ghGraph"></div>
+        <div class="gh-stats" id="ghStats"></div>
+      </div>
+      <div class="gh-error" id="ghError" style="display:none"></div>
+      <div class="gh-loading" id="ghLoading" style="display:none">Loading…</div>
+    </div>
   </div>
 
-  <div class="groups" id="groups"></div>
-  <button class="add-group" id="addGroupBtn">+ Add Group</button>
+  <div class="main">
+    <div class="groups" id="groups"></div>
+    <button class="add-group-btn" id="addGroupBtn">+ Add Group</button>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script>
-    const groupsContainer = document.getElementById("groups");
-    const addGroupBtn = document.getElementById("addGroupBtn");
-    const searchBar = document.querySelector(".search-bar");
-    const suggestionsContainer = document.getElementById("suggestions");
+    /* ── Clock ── */
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+    function tickClock() {
+      const now = new Date();
+      document.getElementById('ch').textContent = String(now.getHours()).padStart(2, '0');
+      document.getElementById('cm').textContent = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock-date').textContent =
+        `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    /* ── Search ── */
+    const searchBar = document.getElementById('searchBar');
+    const suggestionsEl = document.getElementById('suggestions');
     let searchTimeout;
 
-    searchBar.addEventListener("input", (e) => {
-      const query = e.target.value.trim();
-      
+    searchBar.addEventListener('input', e => {
+      const q = e.target.value.trim();
       clearTimeout(searchTimeout);
-      
-      if (query.length === 0) {
-        hideSuggestions();
-        return;
-      }
-      
-      if (query.length === 1) {
-        // Wait longer for single characters to avoid too many requests
-        searchTimeout = setTimeout(() => {
-          fetchSuggestions(query);
-        }, 250);
-      } else {
-        // Faster for 2+ characters
-        searchTimeout = setTimeout(() => {
-          fetchSuggestions(query);
-        }, 100);
-      }
+      if (!q) { hideSug(); return; }
+      searchTimeout = setTimeout(() => fetchSug(q), q.length === 1 ? 250 : 100);
     });
 
-    searchBar.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const query = searchBar.value.trim();
-        if (query) {
-          performSearch(query);
-        }
-      }
-      
-      if (e.key === "Escape") {
-        hideSuggestions();
-        searchBar.blur();
-      }
+    searchBar.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { const q = searchBar.value.trim(); if (q) doSearch(q); }
+      if (e.key === 'Escape') { hideSug(); searchBar.blur(); }
     });
 
-    searchBar.addEventListener("blur", () => {
-      // Delay hiding to allow clicking on suggestions
-      setTimeout(() => {
-        hideSuggestions();
-      }, 150);
-    });
+    searchBar.addEventListener('blur', () => setTimeout(hideSug, 150));
 
-    async function fetchSuggestions(query) {
-      try {
-        // Use Google's suggestion API (JSONP)
-        const script = document.createElement('script');
-        const callbackName = 'handleSuggestions';
-        
-        window[callbackName] = function(data) {
-          showSuggestions(data[1] || []);
-          document.body.removeChild(script);
-          delete window[callbackName];
-        };
-        
-        script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
-        document.body.appendChild(script);
-        
-        // Fallback timeout
-        setTimeout(() => {
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-            delete window[callbackName];
-          }
-        }, 5000);
-        
-      } catch (error) {
-        console.log('Suggestions not available');
-      }
+    function fetchSug(q) {
+      const cb = 'handleSug';
+      const s = document.createElement('script');
+      window[cb] = d => {
+        showSug(d[1] || []);
+        if (document.body.contains(s)) document.body.removeChild(s);
+        delete window[cb];
+      };
+      s.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(q)}&callback=${cb}`;
+      document.body.appendChild(s);
+      setTimeout(() => { if (document.body.contains(s)) document.body.removeChild(s); }, 5000);
     }
 
-    function showSuggestions(suggestions) {
-      suggestionsContainer.innerHTML = '';
-      
-      if (suggestions.length === 0) {
-        hideSuggestions();
-        return;
-      }
-      
-      suggestions.slice(0, 8).forEach(suggestion => {
-        const div = document.createElement('div');
-        div.className = 'suggestion';
-        
-        const icon = document.createElement('div');
-        icon.innerHTML = '🔍';
-        icon.className = 'suggestion-icon';
-        
-        const text = document.createElement('div');
-        text.className = 'suggestion-text';
-        text.textContent = suggestion;
-        
-        div.appendChild(icon);
-        div.appendChild(text);
-        
-        div.addEventListener('click', () => {
-          performSearch(suggestion);
-        });
-        
-        suggestionsContainer.appendChild(div);
+    function showSug(list) {
+      suggestionsEl.innerHTML = '';
+      if (!list.length) { hideSug(); return; }
+      list.slice(0, 8).forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'suggestion';
+        d.innerHTML = `<span class="sug-icon">⌕</span><span>${t}</span>`;
+        d.onclick = () => doSearch(t);
+        suggestionsEl.appendChild(d);
       });
-      
-      suggestionsContainer.style.display = 'block';
+      suggestionsEl.style.display = 'block';
     }
 
-    function hideSuggestions() {
-      suggestionsContainer.style.display = 'none';
+    function hideSug() { suggestionsEl.style.display = 'none'; }
+    function doSearch(q) { window.location.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`; }
+
+    /* ── GitHub contribution graph ── */
+    let ghUser = localStorage.getItem('ghUser') || '';
+
+    const ghInput = document.getElementById('ghInput');
+    const ghGoBtn = document.getElementById('ghGoBtn');
+    const ghSetup = document.getElementById('ghSetup');
+    const ghData = document.getElementById('ghData');
+    const ghError = document.getElementById('ghError');
+    const ghLoading = document.getElementById('ghLoading');
+    const ghAvatar = document.getElementById('ghAvatar');
+    const ghUsername = document.getElementById('ghUsername');
+    const ghEditBtn = document.getElementById('ghEditBtn');
+
+    ghGoBtn.onclick = () => {
+      const u = ghInput.value.trim();
+      if (!u) return;
+      ghUser = u;
+      localStorage.setItem('ghUser', u);
+      loadGitHub(u);
+    };
+
+    ghInput.addEventListener('keydown', e => { if (e.key === 'Enter') ghGoBtn.click(); });
+
+    ghEditBtn.onclick = () => {
+      ghData.style.display = 'none';
+      ghAvatar.style.display = 'none';
+      ghUsername.textContent = 'GitHub';
+      ghEditBtn.style.display = 'none';
+      ghInput.value = ghUser;
+      ghSetup.style.display = '';
+      ghError.style.display = 'none';
+    };
+
+    async function loadGitHub(user) {
+      ghSetup.style.display = 'none';
+      ghData.style.display = 'none';
+      ghError.style.display = 'none';
+      ghLoading.style.display = 'block';
+
+      try {
+        const res = await fetch(`https://api.github.com/users/${encodeURIComponent(user)}`);
+        if (!res.ok) throw new Error(res.status === 404 ? 'User not found' : 'GitHub API error');
+        const profile = await res.json();
+
+        ghAvatar.src = profile.avatar_url;
+        ghAvatar.style.display = '';
+        ghUsername.textContent = profile.login;
+        ghEditBtn.style.display = '';
+
+        const evRes = await fetch(`https://api.github.com/users/${encodeURIComponent(user)}/events?per_page=100`);
+        const events = evRes.ok ? await evRes.json() : [];
+
+        buildGraph(events, profile);
+        ghLoading.style.display = 'none';
+        ghData.style.display = '';
+      } catch (err) {
+        ghLoading.style.display = 'none';
+        ghError.textContent = err.message || 'Could not load GitHub data';
+        ghError.style.display = 'block';
+        ghSetup.style.display = '';
+      }
     }
 
-    function performSearch(query) {
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-      window.location.href = searchUrl;
+    function buildGraph(events, profile) {
+      const pushEvents = events.filter(e => e.type === 'PushEvent');
+      const commitCounts = {};
+      pushEvents.forEach(e => {
+        const day = e.created_at.slice(0, 10);
+        commitCounts[day] = (commitCounts[day] || 0) + (e.payload.size || 0);
+      });
+
+      const totalCommits = Object.values(commitCounts).reduce((a, b) => a + b, 0);
+      const today = new Date();
+      const days = [];
+      for (let i = 89; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        days.push({ key, count: commitCounts[key] || 0 });
+      }
+
+      const max = Math.max(1, ...days.map(d => d.count));
+
+      function level(c) {
+        if (c === 0) return 0;
+        if (c <= max * 0.25) return 1;
+        if (c <= max * 0.5) return 2;
+        if (c <= max * 0.75) return 3;
+        return 4;
+      }
+
+      const graph = document.getElementById('ghGraph');
+      graph.innerHTML = '';
+
+      const cols = Math.ceil(days.length / 7);
+      for (let c = 0; c < cols; c++) {
+        const col = document.createElement('div');
+        col.className = 'gh-col';
+        for (let r = 0; r < 7; r++) {
+          const idx = c * 7 + r;
+          const cell = document.createElement('div');
+          cell.className = 'gh-cell';
+          if (idx < days.length) {
+            const d = days[idx];
+            cell.dataset.level = level(d.count);
+            cell.title = `${d.key}: ${d.count} commit${d.count !== 1 ? 's' : ''}`;
+          }
+          col.appendChild(cell);
+        }
+        graph.appendChild(col);
+      }
+
+      document.getElementById('ghGraphLabel').textContent = 'Last 90 days';
+
+      const streakDays = days.slice().reverse();
+      let streak = 0;
+      for (const d of streakDays) {
+        if (d.count > 0) streak++;
+        else break;
+      }
+
+      const repos = profile.public_repos || 0;
+      document.getElementById('ghStats').innerHTML = `
+        <div class="gh-stat"><div class="gh-stat-val">${totalCommits}</div><div class="gh-stat-label">commits</div></div>
+        <div class="gh-stat"><div class="gh-stat-val">${streak}</div><div class="gh-stat-label">streak</div></div>
+        <div class="gh-stat"><div class="gh-stat-val">${repos}</div><div class="gh-stat-label">repos</div></div>
+      `;
     }
 
-    function createGroup(data = { name: "", shortcuts: [] }) {
-      const groupDiv = document.createElement("div");
-      groupDiv.classList.add("group");
+    if (ghUser) loadGitHub(ghUser);
 
-      const header = document.createElement("div");
-      header.classList.add("group-header");
+    /* ── Groups & Shortcuts ── */
+    const groupsContainer = document.getElementById('groups');
+    const addGroupBtn = document.getElementById('addGroupBtn');
 
-      const nameInput = document.createElement("input");
-      nameInput.className = "group-name";
-      nameInput.placeholder = "Group Name";
+    function createGroup(data = { name: '', shortcuts: [], collapsed: false }) {
+      const groupDiv = document.createElement('div');
+      groupDiv.classList.add('group');
+
+      const header = document.createElement('div');
+      header.classList.add('group-header');
+
+      const dot = document.createElement('div');
+      dot.className = 'group-dot';
+
+      const nameInput = document.createElement('input');
+      nameInput.className = 'group-name';
+      nameInput.placeholder = 'Group Name';
       nameInput.value = data.name;
 
-      const collapseBtn = document.createElement("button");
-      collapseBtn.className = "collapse-btn";
-      collapseBtn.textContent = "▼";
+      const collapseBtn = document.createElement('button');
+      collapseBtn.className = 'collapse-btn';
+      collapseBtn.textContent = '▾';
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "delete-group";
-      deleteBtn.textContent = "🗑️";
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-group';
+      deleteBtn.textContent = '✕';
 
-      header.append(nameInput, collapseBtn, deleteBtn);
+      header.append(dot, nameInput, collapseBtn, deleteBtn);
 
-      const groupContent = document.createElement("div");
-      groupContent.className = "group-content";
+      const groupContent = document.createElement('div');
+      groupContent.className = 'group-content';
 
-      const shortcutGrid = document.createElement("div");
-      shortcutGrid.className = "shortcut-grid";
+      const shortcutGrid = document.createElement('div');
+      shortcutGrid.className = 'shortcut-grid';
 
-      data.shortcuts.forEach(s => {
-        const shortcut = createShortcut(s.url, s.name);
-        shortcutGrid.appendChild(shortcut);
-      });
+      (data.shortcuts || []).forEach(s => shortcutGrid.appendChild(createShortcut(s.url, s.name)));
 
-      const addBtn = document.createElement("button");
-      addBtn.className = "add-shortcut";
-      addBtn.textContent = "+ Website";
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-shortcut';
+      addBtn.textContent = '+ Website';
 
       groupContent.append(addBtn, shortcutGrid);
       groupDiv.append(header, groupContent);
       groupsContainer.appendChild(groupDiv);
 
+      if (data.collapsed) {
+        groupDiv.classList.add('collapsed');
+        collapseBtn.textContent = '▸';
+      }
+
       collapseBtn.onclick = () => {
-        groupDiv.classList.toggle("collapsed");
-        collapseBtn.textContent = groupDiv.classList.contains("collapsed") ? "▶" : "▼";
+        groupDiv.classList.toggle('collapsed');
+        collapseBtn.textContent = groupDiv.classList.contains('collapsed') ? '▸' : '▾';
         saveData();
       };
 
       deleteBtn.onclick = () => {
-        if (confirm("Delete this group and all its shortcuts?")) {
-          groupDiv.remove();
-          saveData();
-        }
+        if (confirm('Delete this group and all its shortcuts?')) { groupDiv.remove(); saveData(); }
       };
 
       nameInput.oninput = saveData;
 
       addBtn.onclick = () => {
         if (shortcutGrid.children.length >= 10) return;
-        const url = prompt("Enter website URL:");
+        const url = prompt('Enter website URL:');
         if (!url) return;
-        const name = prompt("Enter site name (optional):") || "Site";
-        const shortcut = createShortcut(url, name);
-        shortcutGrid.appendChild(shortcut);
+        const name = prompt('Enter site name (optional):') || 'Site';
+        shortcutGrid.appendChild(createShortcut(url, name));
         saveData();
-        updateAddButtonVisibility(shortcutGrid, addBtn);
+        updateAddBtn(shortcutGrid, addBtn);
       };
 
-      // Initialize Sortable for this grid
       new Sortable(shortcutGrid, {
-        group: "shortcuts",
+        group: 'shortcuts',
         animation: 150,
-        ghostClass: "drag-placeholder",
-        onStart: function(evt) {
-          evt.item.classList.add("dragging");
-        },
-        onEnd: function(evt) {
-          evt.item.classList.remove("dragging");
-          updateAllAddButtons();
-          saveData();
-        },
-        onAdd: function(evt) {
-          const targetGrid = evt.to;
-          const addBtn = targetGrid.parentElement.querySelector(".add-shortcut");
-          updateAddButtonVisibility(targetGrid, addBtn);
-        },
-        onRemove: function(evt) {
-          const sourceGrid = evt.from;
-          const addBtn = sourceGrid.parentElement.querySelector(".add-shortcut");
-          updateAddButtonVisibility(sourceGrid, addBtn);
-        }
+        ghostClass: 'drag-placeholder',
+        onStart: evt => evt.item.classList.add('dragging'),
+        onEnd: evt => { evt.item.classList.remove('dragging'); updateAllAddBtns(); saveData(); },
+        onAdd: evt => { const g = evt.to; updateAddBtn(g, g.parentElement.querySelector('.add-shortcut')); },
+        onRemove: evt => { const g = evt.from; updateAddBtn(g, g.parentElement.querySelector('.add-shortcut')); }
       });
 
-      updateAddButtonVisibility(shortcutGrid, addBtn);
+      updateAddBtn(shortcutGrid, addBtn);
     }
 
     function createShortcut(url, name) {
-      const div = document.createElement("div");
-      div.className = "shortcut";
+      const div = document.createElement('div');
+      div.className = 'shortcut';
       div.draggable = true;
-      
-      const img = document.createElement("img");
-      img.src = "https://www.google.com/s2/favicons?sz=64&domain_url=" + encodeURIComponent(url);
-      
-      const nameInput = document.createElement("input");
-      nameInput.className = "shortcut-name";
+
+      const img = document.createElement('img');
+      img.src = `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}`;
+
+      const nameInput = document.createElement('input');
+      nameInput.className = 'shortcut-name';
       nameInput.value = name;
       nameInput.oninput = saveData;
-      
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "shortcut-delete";
-      deleteBtn.innerHTML = "×";
-      deleteBtn.onclick = (e) => {
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'shortcut-delete';
+      deleteBtn.innerHTML = '×';
+      deleteBtn.onclick = e => {
         e.stopPropagation();
-        if (confirm("Remove this shortcut?")) {
+        if (confirm('Remove this shortcut?')) {
           const grid = div.parentElement;
-          const addBtn = grid.parentElement.querySelector(".add-shortcut");
+          const addBtn = grid.parentElement.querySelector('.add-shortcut');
           div.remove();
-          updateAddButtonVisibility(grid, addBtn);
+          updateAddBtn(grid, addBtn);
           saveData();
         }
       };
 
       div.append(img, nameInput, deleteBtn);
-      
-      div.onclick = (e) => {
+      div.onclick = e => {
         if (e.target === nameInput || e.target === deleteBtn) return;
         window.location.href = url;
       };
-
-      div.onmousedown = (e) => {
-        if (e.target === nameInput || e.target === deleteBtn) return;
-        // Middle mouse button (button 1)
-        if (e.button === 1) {
-          e.preventDefault();
-          window.open(url, "_blank");
-        }
-      };
-
-      div.onauxclick = (e) => {
-        if (e.target === nameInput || e.target === deleteBtn) return;
-        // Middle click
-        if (e.button === 1) {
-          e.preventDefault();
-        }
-      };
-
-      // Store URL as data attribute for easier access
       div.dataset.url = url;
-
       return div;
     }
 
-    function updateAddButtonVisibility(grid, addBtn) {
-      if (grid.children.length >= 10) {
-        addBtn.style.display = "none";
-      } else {
-        addBtn.style.display = "block";
-      }
+    function updateAddBtn(grid, btn) {
+      btn.style.display = grid.children.length >= 10 ? 'none' : 'block';
     }
 
-    function updateAllAddButtons() {
-      document.querySelectorAll(".shortcut-grid").forEach(grid => {
-        const addBtn = grid.parentElement.querySelector(".add-shortcut");
-        updateAddButtonVisibility(grid, addBtn);
+    function updateAllAddBtns() {
+      document.querySelectorAll('.shortcut-grid').forEach(g => {
+        updateAddBtn(g, g.parentElement.querySelector('.add-shortcut'));
       });
     }
 
     function saveData() {
-      const data = [];
-      document.querySelectorAll(".group").forEach(group => {
-        const name = group.querySelector(".group-name").value;
-        const shortcuts = [...group.querySelectorAll(".shortcut")].map(shortcut => {
-          const url = shortcut.dataset.url;
-          const name = shortcut.querySelector(".shortcut-name").value;
-          return { url, name };
-        });
-        const collapsed = group.classList.contains("collapsed");
-        data.push({ name, shortcuts, collapsed });
-      });
-      localStorage.setItem("groupsData", JSON.stringify(data));
+      const data = [...document.querySelectorAll('.group')].map(g => ({
+        name: g.querySelector('.group-name').value,
+        shortcuts: [...g.querySelectorAll('.shortcut')].map(s => ({
+          url: s.dataset.url,
+          name: s.querySelector('.shortcut-name').value
+        })),
+        collapsed: g.classList.contains('collapsed')
+      }));
+      localStorage.setItem('groupsData', JSON.stringify(data));
     }
 
     function loadData() {
-      const data = JSON.parse(localStorage.getItem("groupsData") || "[]");
-      data.forEach(group => {
-        createGroup(group);
-        if (group.collapsed) {
-          const lastGroup = groupsContainer.lastElementChild;
-          lastGroup.classList.add("collapsed");
-          lastGroup.querySelector(".collapse-btn").textContent = "▶";
-        }
-      });
+      const data = JSON.parse(localStorage.getItem('groupsData') || '[]');
+      data.forEach(g => createGroup(g));
     }
 
-    addGroupBtn.onclick = () => {
-      createGroup();
-      saveData();
-    };
+    addGroupBtn.onclick = () => { createGroup(); saveData(); };
 
-    // Initialize Sortable for groups container
     new Sortable(groupsContainer, {
-      handle: ".group-header",
+      handle: '.group-header',
       animation: 150,
-      ghostClass: "drag-placeholder",
+      ghostClass: 'drag-placeholder',
       onEnd: saveData
     });
 
     loadData();
-
-    // Auto-focus search bar on page load
-    window.addEventListener('load', () => {
-      searchBar.focus();
-    });
   </script>
 </body>
 </html>
