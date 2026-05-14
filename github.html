@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Activity</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background-color: #202124;
+      color: white;
+      min-height: 100vh;
+      padding: 40px 20px 60px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── SETUP SCREEN ── */
+    #setupScreen {
+      max-width: 480px;
+      margin: 60px auto 0;
+    }
+
+    .setup-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .setup-title svg { width: 28px; height: 28px; flex-shrink: 0; }
+
+    .setup-sub {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 10px 14px;
+      background-color: #303134;
+      border: 1px solid #555;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: #4285f4; }
+
+    .hint-box {
+      background-color: #2a2e32;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .hint-box a { color: #4285f4; text-decoration: none; }
+    .hint-box a:hover { text-decoration: underline; }
+    .hint-box code {
+      background: #383b3e;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #fcd34d;
+    }
+
+    .btn-connect {
+      width: 100%;
+      padding: 12px;
+      background-color: #4285f4;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .btn-connect:hover { background-color: #3574e0; }
+
+    .setup-error {
+      color: #ea4335;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    /* ── LOADING ── */
+    #loadingScreen {
+      display: none;
+      text-align: center;
+      padding: 80px 0;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #444;
+      border-top-color: #4285f4;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label { color: #aaa; font-size: 14px; }
+
+    /* ── DATA SCREEN ── */
+    #dataScreen { display: none; }
+
+    /* Profile */
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #3c4043;
+    }
+    .profile img {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: 2px solid #555;
+    }
+    .profile-name { font-size: 22px; font-weight: 600; }
+    .profile-login { font-size: 14px; color: #4285f4; margin-top: 2px; }
+    .profile-bio { font-size: 13px; color: #aaa; margin-top: 5px; line-height: 1.5; }
+    .profile-actions { margin-left: auto; display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 7px 14px;
+      background-color: #3c4043;
+      border: none;
+      border-radius: 6px;
+      color: #ccc;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .btn-sm:hover { background-color: #555; color: white; }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background-color: #2e2f31;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .stat-num {
+      font-size: 26px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .stat-num.green { color: #4ade80; }
+    .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
+
+    /* Graph */
+    .section-label {
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .graph-wrap {
+      background-color: #2e2f31;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .graph-inner { display: inline-flex; flex-direction: column; gap: 4px; min-width: 100%; }
+
+    .month-row {
+      display: flex;
+      gap: 2px;
+      padding-left: 26px;
+      margin-bottom: 2px;
+    }
+    .month-cell {
+      width: 13px;
+      font-size: 9px;
+      color: #666;
+      flex-shrink: 0;
+      text-align: left;
+      font-family: monospace;
+    }
+
+    .graph-body { display: flex; gap: 4px; }
+
+    .day-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .day-lbl {
+      height: 13px;
+      line-height: 13px;
+      font-size: 9px;
+      color: #666;
+      width: 22px;
+      text-align: right;
+      padding-right: 4px;
+      font-family: monospace;
+    }
+
+    .week-cols { display: flex; gap: 2px; }
+    .week-col { display: flex; flex-direction: column; gap: 2px; }
+
+    .gcell {
+      width: 13px; height: 13px;
+      border-radius: 2px;
+      background-color: #1e2a1e;
+      flex-shrink: 0;
+      cursor: default;
+      transition: opacity 0.1s;
+      position: relative;
+    }
+    .gcell:hover { opacity: 0.7; }
+    .gcell[data-l="0"] { background-color: #2d333b; }
+    .gcell[data-l="1"] { background-color: #0e4429; }
+    .gcell[data-l="2"] { background-color: #006d32; }
+    .gcell[data-l="3"] { background-color: #26a641; }
+    .gcell[data-l="4"] { background-color: #39d353; }
+
+    .graph-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .legend { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; }
+    .leg-cells { display: flex; gap: 2px; }
+    .leg-cell { width: 12px; height: 12px; border-radius: 2px; }
+    .graph-total { font-size: 13px; color: #aaa; }
+    .graph-total strong { color: white; }
+
+    /* Repos */
+    .repos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .repo-card {
+      background-color: #2e2f31;
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background-color 0.15s;
+      border: 1px solid transparent;
+    }
+    .repo-card:hover { background-color: #3a3b3d; border-color: #555; }
+    .repo-name { font-size: 14px; font-weight: 500; color: #4285f4; }
+    .repo-desc { font-size: 12px; color: #aaa; line-height: 1.4; flex: 1;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .repo-meta { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #666; margin-top: 2px; }
+    .lang-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
+
+    /* Tooltip */
+    #tooltip {
+      position: fixed;
+      background: #3c4043;
+      border: 1px solid #666;
+      border-radius: 5px;
+      font-size: 11px;
+      font-family: monospace;
+      color: white;
+      padding: 4px 8px;
+      pointer-events: none;
+      z-index: 200;
+      display: none;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    /* Settings modal */
+    .modal-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: #2e2f31;
+      border: 1px solid #555;
+      border-radius: 12px;
+      padding: 24px;
+      width: 380px; max-width: 90vw;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .modal-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .btn-danger {
+      padding: 8px 14px; border-radius: 6px; border: 1px solid #ea4335;
+      background: transparent; color: #ea4335; font-size: 13px; cursor: pointer;
+      margin-right: auto; transition: background 0.12s;
+    }
+    .btn-danger:hover { background: rgba(234,67,53,0.1); }
+    .btn-cancel {
+      padding: 8px 14px; border-radius: 6px; border: 1px solid #555;
+      background: transparent; color: #ccc; font-size: 13px; cursor: pointer;
+    }
+    .btn-cancel:hover { color: white; }
+    .btn-save {
+      padding: 8px 14px; border-radius: 6px; border: none;
+      background: #4285f4; color: white; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.12s;
+    }
+    .btn-save:hover { background: #3574e0; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- SETUP -->
+  <div id="setupScreen">
+    <div class="setup-title">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+      </svg>
+      GitHub Activity
+    </div>
+    <div class="setup-sub">Enter your GitHub username and a personal access token to see your real contribution graph.</div>
+
+    <div class="field-label">USERNAME</div>
+    <input class="field-input" id="sUser" placeholder="your-username" autocomplete="off" spellcheck="false" />
+
+    <div class="field-label">PERSONAL ACCESS TOKEN</div>
+    <input class="field-input" id="sToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off" />
+
+    <div class="hint-box">
+      A token is needed to access the GitHub GraphQL API which gives your <strong>real, full contribution history</strong> — the same data shown on your GitHub profile page.<br><br>
+      Create one at <a href="https://github.com/settings/tokens/new?scopes=read%3Auser%2Crepo&description=New+Tab+Page" target="_blank">github.com/settings/tokens</a> with scopes <code>read:user</code> and <code>repo</code>.<br><br>
+      Your token is saved only in <code>localStorage</code> on this device.
+    </div>
+
+    <button class="btn-connect" id="connectBtn">Connect</button>
+    <div class="setup-error" id="setupErr"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-label" id="loadingLabel">Connecting to GitHub…</div>
+  </div>
+
+  <!-- DATA -->
+  <div id="dataScreen">
+
+    <div class="profile">
+      <img id="dAvatar" src="" alt="">
+      <div>
+        <div class="profile-name" id="dName"></div>
+        <div class="profile-login" id="dLogin"></div>
+        <div class="profile-bio" id="dBio"></div>
+      </div>
+      <div class="profile-actions">
+        <a class="btn-sm" id="dProfileLink" href="#" target="_blank">View on GitHub</a>
+        <button class="btn-sm" id="settingsBtn">⚙ Settings</button>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="section-label" id="graphLabel">Contributions</div>
+    <div class="graph-wrap">
+      <div class="graph-inner">
+        <div class="month-row" id="monthRow"></div>
+        <div class="graph-body">
+          <div class="day-col" id="dayCol"></div>
+          <div class="week-cols" id="weekCols"></div>
+        </div>
+      </div>
+      <div class="graph-footer">
+        <div class="legend">
+          Less
+          <div class="leg-cells">
+            <div class="leg-cell" style="background:#2d333b"></div>
+            <div class="leg-cell" style="background:#0e4429"></div>
+            <div class="leg-cell" style="background:#006d32"></div>
+            <div class="leg-cell" style="background:#26a641"></div>
+            <div class="leg-cell" style="background:#39d353"></div>
+          </div>
+          More
+        </div>
+        <div class="graph-total" id="graphTotal"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Repositories</div>
+    <div class="repos-grid" id="reposGrid"></div>
+
+  </div>
+
+</div>
+
+<!-- Settings modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-title">Settings</div>
+    <div class="field-label">USERNAME</div>
+    <input class="field-input" id="mUser" />
+    <div class="field-label">TOKEN</div>
+    <input class="field-input" id="mToken" type="password" />
+    <div class="modal-row">
+      <button class="btn-danger" id="clearBtn">Clear & Reset</button>
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-save" id="saveBtn">Save & Reload</button>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+  /* ── credentials ── */
+  let ghUser  = localStorage.getItem('ghUser')  || '';
+  let ghToken = localStorage.getItem('ghToken') || '';
+
+  /* ── view helpers ── */
+  function showView(id) {
+    ['setupScreen','loadingScreen','dataScreen'].forEach(v =>
+      document.getElementById(v).style.display = v === id ? '' : 'none'
+    );
+  }
+
+  /* ── pre-fill if we have creds ── */
+  if (ghUser)  document.getElementById('sUser').value  = ghUser;
+  if (ghToken) document.getElementById('sToken').value = ghToken;
+
+  /* ── connect button ── */
+  document.getElementById('connectBtn').onclick = startConnect;
+  document.getElementById('sUser').onkeydown  = e => e.key === 'Enter' && startConnect();
+  document.getElementById('sToken').onkeydown = e => e.key === 'Enter' && startConnect();
+
+  function startConnect() {
+    const u = document.getElementById('sUser').value.trim();
+    const t = document.getElementById('sToken').value.trim();
+    if (!u) { document.getElementById('setupErr').textContent = 'Please enter a username.'; return; }
+    if (!t) { document.getElementById('setupErr').textContent = 'A token is required for accurate contribution data.'; return; }
+    document.getElementById('setupErr').textContent = '';
+    ghUser = u; ghToken = t;
+    localStorage.setItem('ghUser',  u);
+    localStorage.setItem('ghToken', t);
+    fetchData();
+  }
+
+  /* ── settings modal ── */
+  document.getElementById('settingsBtn').onclick = () => {
+    document.getElementById('mUser').value  = ghUser;
+    document.getElementById('mToken').value = ghToken;
+    document.getElementById('modalBg').classList.add('open');
+  };
+  document.getElementById('cancelBtn').onclick = () => document.getElementById('modalBg').classList.remove('open');
+  document.getElementById('modalBg').onclick = e => {
+    if (e.target === document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('open');
+  };
+  document.getElementById('saveBtn').onclick = () => {
+    const u = document.getElementById('mUser').value.trim();
+    const t = document.getElementById('mToken').value.trim();
+    if (!u || !t) return;
+    ghUser = u; ghToken = t;
+    localStorage.setItem('ghUser', u); localStorage.setItem('ghToken', t);
+    document.getElementById('modalBg').classList.remove('open');
+    fetchData();
+  };
+  document.getElementById('clearBtn').onclick = () => {
+    if (!confirm('Clear saved credentials?')) return;
+    localStorage.removeItem('ghUser'); localStorage.removeItem('ghToken');
+    document.getElementById('modalBg').classList.remove('open');
+    showView('setupScreen');
+  };
+
+  /* ── main fetch — GitHub GraphQL ── */
+  async function fetchData() {
+    showView('loadingScreen');
+    document.getElementById('loadingLabel').textContent = 'Fetching contribution data…';
+
+    const query = `{
+      user(login: "${ghUser}") {
+        name
+        login
+        avatarUrl
+        bio
+        followers { totalCount }
+        following  { totalCount }
+        repositories(
+          first: 6,
+          ownerAffiliations: OWNER,
+          isFork: false,
+          orderBy: { field: UPDATED_AT, direction: DESC }
+        ) {
+          nodes {
+            name description url
+            stargazerCount forkCount isPrivate
+            primaryLanguage { name color }
+          }
+        }
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              firstDay
+              contributionDays {
+                date
+                weekday
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }`;
+
+    try {
+      const res = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Authorization': `bearer ${ghToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      if (res.status === 401) throw new Error('Invalid token — please check your token and try again.');
+      if (res.status === 403) throw new Error('Forbidden — make sure your token has read:user and repo scopes.');
+      if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+
+      const json = await res.json();
+
+      if (json.errors && json.errors.length) {
+        throw new Error(json.errors[0].message);
+      }
+
+      const u = json.data && json.data.user;
+      if (!u) throw new Error('User not found. Check the username.');
+
+      renderAll(u);
+      showView('dataScreen');
+
+    } catch (err) {
+      showView('setupScreen');
+      document.getElementById('setupErr').textContent = err.message || 'Unknown error — check console.';
+      console.error(err);
+    }
+  }
+
+  /* ── render ── */
+  function renderAll(u) {
+    const cal = u.contributionsCollection.contributionCalendar;
+
+    /* profile */
+    document.getElementById('dAvatar').src          = u.avatarUrl;
+    document.getElementById('dName').textContent    = u.name || u.login;
+    document.getElementById('dLogin').textContent   = '@' + u.login;
+    document.getElementById('dBio').textContent     = u.bio || '';
+    document.getElementById('dProfileLink').href    = 'https://github.com/' + u.login;
+
+    /* stats */
+    const allDays    = cal.weeks.flatMap(w => w.contributionDays);
+    const activeDays = allDays.filter(d => d.contributionCount > 0).length;
+    const revDays    = [...allDays].reverse();
+    let streak = 0;
+    for (const d of revDays) { if (d.contributionCount > 0) streak++; else break; }
+
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num green">${fmt(cal.totalContributions)}</div>
+        <div class="stat-label">contributions this year</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${streak}</div>
+        <div class="stat-label">day streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${fmt(u.followers.totalCount)}</div>
+        <div class="stat-label">followers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${fmt(u.following.totalCount)}</div>
+        <div class="stat-label">following</div>
+      </div>
+    `;
+
+    renderGraph(cal.weeks, cal.totalContributions);
+    renderRepos(u.repositories.nodes);
+  }
+
+  function renderGraph(weeks, total) {
+    const allDays = weeks.flatMap(w => w.contributionDays);
+    const max     = Math.max(1, ...allDays.map(d => d.contributionCount));
+
+    function lvl(c) {
+      if (c === 0)          return 0;
+      if (c <= max * 0.15)  return 1;
+      if (c <= max * 0.40)  return 2;
+      if (c <= max * 0.70)  return 3;
+      return 4;
+    }
+
+    /* month labels */
+    const MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthRow = document.getElementById('monthRow');
+    monthRow.innerHTML = '';
+    let lastMonth = -1;
+    weeks.forEach(w => {
+      const m = new Date(w.firstDay + 'T12:00:00').getMonth();
+      const cell = document.createElement('div');
+      cell.className = 'month-cell';
+      cell.textContent = m !== lastMonth ? MNAMES[m] : '';
+      if (m !== lastMonth) lastMonth = m;
+      monthRow.appendChild(cell);
+    });
+
+    /* day labels */
+    const dayCol = document.getElementById('dayCol');
+    dayCol.innerHTML = '';
+    ['','Mon','','Wed','','Fri',''].forEach(label => {
+      const d = document.createElement('div');
+      d.className = 'day-lbl';
+      d.textContent = label;
+      dayCol.appendChild(d);
+    });
+
+    /* week columns */
+    const weekCols = document.getElementById('weekCols');
+    weekCols.innerHTML = '';
+    const tip = document.getElementById('tooltip');
+
+    weeks.forEach(w => {
+      const col = document.createElement('div');
+      col.className = 'week-col';
+
+      /* pad missing days at week start */
+      const firstWd = w.contributionDays[0]?.weekday ?? 0;
+      for (let p = 0; p < firstWd; p++) {
+        const pad = document.createElement('div');
+        pad.className = 'gcell';
+        pad.style.visibility = 'hidden';
+        col.appendChild(pad);
+      }
+
+      w.contributionDays.forEach(d => {
+        const cell = document.createElement('div');
+        cell.className = 'gcell';
+        cell.dataset.l = lvl(d.contributionCount);
+
+        cell.addEventListener('mouseenter', e => {
+          const dt = new Date(d.date + 'T12:00:00');
+          tip.textContent = `${d.contributionCount} contribution${d.contributionCount !== 1 ? 's' : ''} on ${dt.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          tip.style.display = 'block';
+        });
+        cell.addEventListener('mousemove', e => {
+          tip.style.left = (e.clientX + 12) + 'px';
+          tip.style.top  = (e.clientY - 32) + 'px';
+        });
+        cell.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+
+        col.appendChild(cell);
+      });
+
+      weekCols.appendChild(col);
+    });
+
+    document.getElementById('graphLabel').textContent = 'Contributions this year';
+    document.getElementById('graphTotal').innerHTML   = `<strong>${fmt(total)}</strong> total contributions`;
+  }
+
+  function renderRepos(repos) {
+    const COLORS = {
+      JavaScript:'#f1e05a', TypeScript:'#3178c6', Python:'#3572a5',
+      Go:'#00add8', Rust:'#dea584', Java:'#b07219', Ruby:'#701516',
+      PHP:'#4f5d95', Swift:'#f05138', Kotlin:'#a97bff', CSS:'#563d7c',
+      HTML:'#e34c26', 'C++':'#f34b7d', C:'#555', Shell:'#89e051',
+      Vue:'#41b883', Dart:'#00b4ab', Svelte:'#ff3e00'
+    };
+
+    const grid = document.getElementById('reposGrid');
+    grid.innerHTML = '';
+    repos.slice(0, 6).forEach(r => {
+      const a = document.createElement('a');
+      a.className = 'repo-card';
+      a.href = r.url; a.target = '_blank'; a.rel = 'noopener';
+      const lang  = r.primaryLanguage?.name || '';
+      const color = r.primaryLanguage?.color || COLORS[lang] || '#666';
+      a.innerHTML = `
+        <div class="repo-name">${esc(r.name)}${r.isPrivate ? ' <span style="font-size:10px;color:#fcd34d;font-weight:400">private</span>' : ''}</div>
+        <div class="repo-desc">${esc(r.description || '')}</div>
+        <div class="repo-meta">
+          ${lang ? `<div class="lang-dot" style="background:${color}"></div><span>${esc(lang)}</span>` : ''}
+          <span>★ ${fmt(r.stargazerCount)}</span>
+          <span>⑂ ${fmt(r.forkCount)}</span>
+        </div>
+      `;
+      grid.appendChild(a);
+    });
+  }
+
+  function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ── auto-load if creds exist ── */
+  if (ghUser && ghToken) {
+    fetchData();
+  } else {
+    showView('setupScreen');
+  }
+</script>
+</body>
+</html>
