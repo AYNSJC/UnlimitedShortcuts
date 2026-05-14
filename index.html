@@ -57,24 +57,11 @@
       border-bottom: 1px solid #444;
     }
 
-    .suggestion:hover {
-      background-color: #3c4043;
-    }
+    .suggestion:hover { background-color: #3c4043; }
+    .suggestion:last-child { border-bottom: none; }
 
-    .suggestion:last-child {
-      border-bottom: none;
-    }
-
-    .suggestion-icon {
-      width: 16px;
-      height: 16px;
-      opacity: 0.6;
-    }
-
-    .suggestion-text {
-      flex: 1;
-      font-size: 16px;
-    }
+    .suggestion-icon { width: 16px; height: 16px; opacity: 0.6; }
+    .suggestion-text { flex: 1; font-size: 16px; }
 
     .groups {
       width: 90%;
@@ -113,8 +100,7 @@
       color: white;
     }
 
-    .collapse-btn,
-    .delete-group {
+    .collapse-btn, .delete-group {
       background: none;
       border: none;
       color: white;
@@ -138,9 +124,7 @@
       transition: background-color 0.2s;
     }
 
-    .shortcut-grid.drag-over {
-      background-color: #3c4043;
-    }
+    .shortcut-grid.drag-over { background-color: #3c4043; }
 
     .shortcut {
       display: flex;
@@ -155,14 +139,8 @@
       user-select: none;
     }
 
-    .shortcut:hover {
-      transform: scale(1.05);
-    }
-
-    .shortcut.dragging {
-      opacity: 0.5;
-      transform: rotate(5deg);
-    }
+    .shortcut:hover { transform: scale(1.05); }
+    .shortcut.dragging { opacity: 0.5; transform: rotate(5deg); }
 
     .shortcut img {
       width: 32px;
@@ -205,9 +183,7 @@
       z-index: 10;
     }
 
-    .shortcut:hover .shortcut-delete {
-      display: flex;
-    }
+    .shortcut:hover .shortcut-delete { display: flex; }
 
     .add-shortcut {
       background-color: #3c4043;
@@ -219,9 +195,7 @@
       align-self: flex-start;
     }
 
-    .group.collapsed .group-content {
-      display: none;
-    }
+    .group.collapsed .group-content { display: none; }
 
     .add-group {
       background-color: #3c4043;
@@ -240,7 +214,7 @@
       opacity: 0.5;
     }
 
-    /* GitHub button — fixed bottom-right */
+    /* ── GitHub FAB ── */
     .github-fab {
       position: fixed;
       bottom: 24px;
@@ -259,13 +233,121 @@
       transition: background-color 0.2s, color 0.2s;
       z-index: 999;
     }
-    .github-fab:hover {
-      background-color: #555;
-      color: white;
+    .github-fab:hover { background-color: #555; color: white; }
+    .github-fab svg { width: 22px; height: 22px; }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
     }
-    .github-fab svg {
-      width: 22px;
-      height: 22px;
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: #2e2f31;
+      border-radius: 14px;
+      padding: 28px 28px 22px;
+      width: 360px;
+      max-width: 90vw;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: white;
+      margin: 0;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .modal-label {
+      font-size: 12px;
+      color: #aaa;
+      letter-spacing: 0.4px;
+    }
+
+    .modal-input {
+      background: #3c4043;
+      border: 1px solid #555;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .modal-input:focus { border-color: #4285f4; }
+    .modal-input::placeholder { color: #666; }
+
+    .modal-favicon-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 32px;
+    }
+    .modal-favicon-preview img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: none;
+    }
+    .modal-favicon-preview span {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .modal-btn-cancel {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: transparent;
+      color: #ccc;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .modal-btn-cancel:hover { border-color: #888; color: white; }
+
+    .modal-btn-add {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: #4285f4;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .modal-btn-add:hover { background: #3574e0; }
+    .modal-btn-add:disabled { background: #444; color: #777; cursor: default; }
+
+    .modal-error {
+      font-size: 12px;
+      color: #ea4335;
+      min-height: 16px;
     }
   </style>
 </head>
@@ -279,84 +361,209 @@
   <div class="groups" id="groups"></div>
   <button class="add-group" id="addGroupBtn">+ Add Group</button>
 
-  <!-- GitHub FAB — opens github.html in background tab -->
+  <!-- GitHub FAB -->
   <a class="github-fab" id="githubFab" title="GitHub Activity">
     <svg viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
     </svg>
   </a>
 
+  <!-- ADD WEBSITE MODAL -->
+  <div class="modal-overlay" id="addSiteModal">
+    <div class="modal-box">
+      <div class="modal-title">Add Website</div>
+
+      <div class="modal-field">
+        <div class="modal-label">URL</div>
+        <input class="modal-input" id="siteUrl" placeholder="https://example.com" autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div class="modal-favicon-preview">
+        <img id="faviconPreview" src="" alt="">
+        <span id="faviconStatus">Enter a URL to preview</span>
+      </div>
+
+      <div class="modal-field">
+        <div class="modal-label">Label</div>
+        <input class="modal-input" id="siteName" placeholder="e.g. YouTube" autocomplete="off" />
+      </div>
+
+      <div class="modal-error" id="siteError"></div>
+
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" id="siteCancel">Cancel</button>
+        <button class="modal-btn-add" id="siteAdd">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD GROUP MODAL -->
+  <div class="modal-overlay" id="addGroupModal">
+    <div class="modal-box">
+      <div class="modal-title">New Group</div>
+
+      <div class="modal-field">
+        <div class="modal-label">Group Name</div>
+        <input class="modal-input" id="groupNameInput" placeholder="e.g. Work, Social, Tools…" autocomplete="off" />
+      </div>
+
+      <div class="modal-error" id="groupError"></div>
+
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" id="groupCancel">Cancel</button>
+        <button class="modal-btn-add" id="groupAdd">Create</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script>
     const groupsContainer = document.getElementById("groups");
-    const addGroupBtn = document.getElementById("addGroupBtn");
-    const searchBar = document.querySelector(".search-bar");
-    const suggestionsContainer = document.getElementById("suggestions");
+    const addGroupBtn     = document.getElementById("addGroupBtn");
+    const searchBar       = document.querySelector(".search-bar");
+    const suggestionsEl   = document.getElementById("suggestions");
 
+    /* ── SEARCH ── */
     let searchTimeout;
-
     searchBar.addEventListener("input", (e) => {
-      const query = e.target.value.trim();
+      const q = e.target.value.trim();
       clearTimeout(searchTimeout);
-      if (query.length === 0) { hideSuggestions(); return; }
-      searchTimeout = setTimeout(() => fetchSuggestions(query), query.length === 1 ? 250 : 100);
+      if (!q) { hideSuggestions(); return; }
+      searchTimeout = setTimeout(() => fetchSuggestions(q), q.length === 1 ? 250 : 100);
     });
-
     searchBar.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const query = searchBar.value.trim();
-        if (query) performSearch(query);
-      }
+      if (e.key === "Enter") { const q = searchBar.value.trim(); if (q) performSearch(q); }
       if (e.key === "Escape") { hideSuggestions(); searchBar.blur(); }
     });
-
     searchBar.addEventListener("blur", () => setTimeout(hideSuggestions, 150));
 
-    async function fetchSuggestions(query) {
-      try {
-        const script = document.createElement('script');
-        const callbackName = 'handleSuggestions';
-        window[callbackName] = function(data) {
-          showSuggestions(data[1] || []);
-          document.body.removeChild(script);
-          delete window[callbackName];
-        };
-        script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
-        document.body.appendChild(script);
-        setTimeout(() => {
-          if (document.body.contains(script)) { document.body.removeChild(script); delete window[callbackName]; }
-        }, 5000);
-      } catch (error) { console.log('Suggestions not available'); }
+    function fetchSuggestions(query) {
+      const script = document.createElement('script');
+      const cb = 'handleSuggestions';
+      window[cb] = (data) => {
+        showSuggestions(data[1] || []);
+        if (document.body.contains(script)) document.body.removeChild(script);
+        delete window[cb];
+      };
+      script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${cb}`;
+      document.body.appendChild(script);
+      setTimeout(() => { if (document.body.contains(script)) { document.body.removeChild(script); delete window[cb]; } }, 5000);
     }
 
     function showSuggestions(suggestions) {
-      suggestionsContainer.innerHTML = '';
-      if (suggestions.length === 0) { hideSuggestions(); return; }
-      suggestions.slice(0, 8).forEach(suggestion => {
+      suggestionsEl.innerHTML = '';
+      if (!suggestions.length) { hideSuggestions(); return; }
+      suggestions.slice(0, 8).forEach(s => {
         const div = document.createElement('div');
         div.className = 'suggestion';
-        const icon = document.createElement('div');
-        icon.innerHTML = '🔍';
-        icon.className = 'suggestion-icon';
-        const text = document.createElement('div');
-        text.className = 'suggestion-text';
-        text.textContent = suggestion;
-        div.appendChild(icon);
-        div.appendChild(text);
-        div.addEventListener('click', () => performSearch(suggestion));
-        suggestionsContainer.appendChild(div);
+        const icon = document.createElement('div'); icon.innerHTML = '🔍'; icon.className = 'suggestion-icon';
+        const text = document.createElement('div'); text.className = 'suggestion-text'; text.textContent = s;
+        div.appendChild(icon); div.appendChild(text);
+        div.addEventListener('click', () => performSearch(s));
+        suggestionsEl.appendChild(div);
       });
-      suggestionsContainer.style.display = 'block';
+      suggestionsEl.style.display = 'block';
     }
 
-    function hideSuggestions() { suggestionsContainer.style.display = 'none'; }
+    function hideSuggestions() { suggestionsEl.style.display = 'none'; }
+    function performSearch(q) { window.location.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`; }
 
-    function performSearch(query) {
-      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    /* ── ADD WEBSITE MODAL ── */
+    let _pendingGrid = null;
+    let _pendingAddBtn = null;
+    let _faviconTimer = null;
+
+    const addSiteModal   = document.getElementById('addSiteModal');
+    const siteUrlInput   = document.getElementById('siteUrl');
+    const siteNameInput  = document.getElementById('siteName');
+    const faviconPreview = document.getElementById('faviconPreview');
+    const faviconStatus  = document.getElementById('faviconStatus');
+    const siteError      = document.getElementById('siteError');
+
+    function openAddSiteModal(grid, addBtn) {
+      _pendingGrid   = grid;
+      _pendingAddBtn = addBtn;
+      siteUrlInput.value  = '';
+      siteNameInput.value = '';
+      siteError.textContent = '';
+      faviconPreview.style.display = 'none';
+      faviconStatus.textContent = 'Enter a URL to preview';
+      addSiteModal.classList.add('open');
+      setTimeout(() => siteUrlInput.focus(), 50);
     }
 
-    function createGroup(data = { name: "", shortcuts: [] }) {
+    function closeAddSiteModal() { addSiteModal.classList.remove('open'); }
+
+    // Live favicon preview as user types URL
+    siteUrlInput.addEventListener('input', () => {
+      clearTimeout(_faviconTimer);
+      const raw = siteUrlInput.value.trim();
+      if (!raw) { faviconPreview.style.display = 'none'; faviconStatus.textContent = 'Enter a URL to preview'; return; }
+      _faviconTimer = setTimeout(() => {
+        const url = raw.startsWith('http') ? raw : 'https://' + raw;
+        // Auto-fill name from hostname if name is empty
+        try {
+          const host = new URL(url).hostname.replace(/^www\./, '');
+          if (!siteNameInput.value) siteNameInput.value = host;
+        } catch {}
+        const src = `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}`;
+        faviconPreview.onload  = () => { faviconPreview.style.display = 'block'; faviconStatus.textContent = ''; };
+        faviconPreview.onerror = () => { faviconPreview.style.display = 'none'; faviconStatus.textContent = 'No icon found'; };
+        faviconPreview.src = src;
+      }, 400);
+    });
+
+    function commitAddSite() {
+      siteError.textContent = '';
+      let url = siteUrlInput.value.trim();
+      if (!url) { siteError.textContent = 'Please enter a URL.'; siteUrlInput.focus(); return; }
+      if (!url.startsWith('http')) url = 'https://' + url;
+      try { new URL(url); } catch { siteError.textContent = 'That doesn\'t look like a valid URL.'; siteUrlInput.focus(); return; }
+      const name = siteNameInput.value.trim() || new URL(url).hostname.replace(/^www\./, '');
+      _pendingGrid.appendChild(createShortcut(url, name));
+      updateAddButtonVisibility(_pendingGrid, _pendingAddBtn);
+      saveData();
+      closeAddSiteModal();
+    }
+
+    document.getElementById('siteAdd').addEventListener('click', commitAddSite);
+    document.getElementById('siteCancel').addEventListener('click', closeAddSiteModal);
+    addSiteModal.addEventListener('click', (e) => { if (e.target === addSiteModal) closeAddSiteModal(); });
+    siteUrlInput.addEventListener('keydown',  (e) => { if (e.key === 'Enter') { e.preventDefault(); siteNameInput.focus(); } if (e.key === 'Escape') closeAddSiteModal(); });
+    siteNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commitAddSite(); } if (e.key === 'Escape') closeAddSiteModal(); });
+
+    /* ── ADD GROUP MODAL ── */
+    const addGroupModal   = document.getElementById('addGroupModal');
+    const groupNameInput  = document.getElementById('groupNameInput');
+    const groupError      = document.getElementById('groupError');
+
+    function openAddGroupModal() {
+      groupNameInput.value = '';
+      groupError.textContent = '';
+      addGroupModal.classList.add('open');
+      setTimeout(() => groupNameInput.focus(), 50);
+    }
+
+    function closeAddGroupModal() { addGroupModal.classList.remove('open'); }
+
+    function commitAddGroup() {
+      groupError.textContent = '';
+      const name = groupNameInput.value.trim();
+      if (!name) { groupError.textContent = 'Please enter a group name.'; groupNameInput.focus(); return; }
+      createGroup({ name, shortcuts: [], collapsed: false });
+      saveData();
+      closeAddGroupModal();
+    }
+
+    document.getElementById('groupAdd').addEventListener('click', commitAddGroup);
+    document.getElementById('groupCancel').addEventListener('click', closeAddGroupModal);
+    addGroupModal.addEventListener('click', (e) => { if (e.target === addGroupModal) closeAddGroupModal(); });
+    groupNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commitAddGroup(); } if (e.key === 'Escape') closeAddGroupModal(); });
+
+    addGroupBtn.onclick = () => openAddGroupModal();
+
+    /* ── GROUPS ── */
+    function createGroup(data = { name: "", shortcuts: [], collapsed: false }) {
       const groupDiv = document.createElement("div");
       groupDiv.classList.add("group");
 
@@ -394,6 +601,11 @@
       groupDiv.append(header, groupContent);
       groupsContainer.appendChild(groupDiv);
 
+      if (data.collapsed) {
+        groupDiv.classList.add("collapsed");
+        collapseBtn.textContent = "▶";
+      }
+
       collapseBtn.onclick = () => {
         groupDiv.classList.toggle("collapsed");
         collapseBtn.textContent = groupDiv.classList.contains("collapsed") ? "▶" : "▼";
@@ -408,12 +620,7 @@
 
       addBtn.onclick = () => {
         if (shortcutGrid.children.length >= 10) return;
-        const url = prompt("Enter website URL:");
-        if (!url) return;
-        const name = prompt("Enter site name (optional):") || "Site";
-        shortcutGrid.appendChild(createShortcut(url, name));
-        saveData();
-        updateAddButtonVisibility(shortcutGrid, addBtn);
+        openAddSiteModal(shortcutGrid, addBtn);
       };
 
       new Sortable(shortcutGrid, {
@@ -421,18 +628,20 @@
         animation: 150,
         ghostClass: "drag-placeholder",
         onStart: evt => evt.item.classList.add("dragging"),
-        onEnd: evt => { evt.item.classList.remove("dragging"); updateAllAddButtons(); saveData(); },
-        onAdd: evt => { const g = evt.to; updateAddButtonVisibility(g, g.parentElement.querySelector(".add-shortcut")); },
-        onRemove: evt => { const g = evt.from; updateAddButtonVisibility(g, g.parentElement.querySelector(".add-shortcut")); }
+        onEnd:   evt => { evt.item.classList.remove("dragging"); updateAllAddButtons(); saveData(); },
+        onAdd:   evt => { const g = evt.to;   updateAddButtonVisibility(g, g.parentElement.querySelector(".add-shortcut")); },
+        onRemove:evt => { const g = evt.from; updateAddButtonVisibility(g, g.parentElement.querySelector(".add-shortcut")); }
       });
 
       updateAddButtonVisibility(shortcutGrid, addBtn);
     }
 
+    /* ── SHORTCUTS ── */
     function createShortcut(url, name) {
       const div = document.createElement("div");
       div.className = "shortcut";
       div.draggable = true;
+      div.dataset.url = url;
 
       const img = document.createElement("img");
       img.src = "https://www.google.com/s2/favicons?sz=64&domain_url=" + encodeURIComponent(url);
@@ -457,7 +666,6 @@
       };
 
       div.append(img, nameInput, deleteBtn);
-      div.dataset.url = url;
 
       // Left-click → same tab
       div.addEventListener("click", (e) => {
@@ -465,16 +673,15 @@
         window.location.href = url;
       });
 
-      // Middle-click → open in new background tab, stay on this page
+      // Middle-click → background new tab, stay here
       div.addEventListener("mousedown", (e) => {
         if (e.button === 1) {
-          e.preventDefault(); // stop browser default middle-click scroll/navigation
+          e.preventDefault();
           const w = window.open(url, "_blank", "noopener,noreferrer");
-          if (w) w.blur();   // keep focus on new tab page
+          if (w) w.blur();
           window.focus();
         }
       });
-      // Suppress the browser's own auxclick so it doesn't fire navigation too
       div.addEventListener("auxclick", (e) => { if (e.button === 1) e.preventDefault(); });
 
       return div;
@@ -507,17 +714,8 @@
 
     function loadData() {
       const data = JSON.parse(localStorage.getItem("groupsData") || "[]");
-      data.forEach(group => {
-        createGroup(group);
-        if (group.collapsed) {
-          const lastGroup = groupsContainer.lastElementChild;
-          lastGroup.classList.add("collapsed");
-          lastGroup.querySelector(".collapse-btn").textContent = "▶";
-        }
-      });
+      data.forEach(group => createGroup(group));
     }
-
-    addGroupBtn.onclick = () => { createGroup(); saveData(); };
 
     new Sortable(groupsContainer, {
       handle: ".group-header",
@@ -528,7 +726,7 @@
 
     loadData();
 
-    // GitHub FAB — always opens in a background tab, no focus switch
+    // GitHub FAB — background tab, no focus switch
     document.getElementById("githubFab").addEventListener("click", (e) => {
       e.preventDefault();
       const w = window.open("github.html", "_blank", "noopener,noreferrer");
